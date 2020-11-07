@@ -42,7 +42,9 @@ normalfinal25extra = ['Rupees (20)'] * 23 + ['Rupees (5)'] * 2
 Difficulty = namedtuple('Difficulty',
                         ['baseitems', 'bottles', 'bottle_count', 'same_bottle', 'progressiveshield',
                          'basicshield', 'progressivearmor', 'basicarmor', 'swordless', 'progressivemagic', 'basicmagic',
-                         'progressivesword', 'basicsword', 'progressivebow', 'basicbow', 'timedohko', 'timedother',
+                         'progressivesword', 'basicsword', 
+                         'progressivebow', 'basicbow', 'swordless_basicbow', 'legacybow', 'swordless_legacybow',
+                         'timedohko', 'timedother',
                          'universal_keys',
                          'extras', 'progressive_sword_limit', 'progressive_shield_limit',
                          'progressive_armor_limit', 'progressive_bottle_limit',
@@ -67,6 +69,9 @@ difficulties = {
         basicsword=['Master Sword', 'Tempered Sword', 'Golden Sword', 'Fighter Sword'] * 2,
         progressivebow=["Progressive Bow"] * 2,
         basicbow=['Bow', 'Silver Bow'] * 2,
+        swordless_basicbow=['Bow', 'Silver Bow'] * 2,
+        legacybow=['Bow', 'Silver Arrows'] * 2,
+        swordless_legacybow=['Bow', 'Silver Arrows'] * 2,
         timedohko=['Green Clock'] * 25,
         timedother=['Green Clock'] * 20 + ['Blue Clock'] * 10 + ['Red Clock'] * 10,
         universal_keys=['Small Key (Universal)'] * 28,
@@ -95,6 +100,9 @@ difficulties = {
         basicsword=['Fighter Sword', 'Master Sword', 'Tempered Sword', 'Golden Sword'],
         progressivebow=["Progressive Bow"] * 2,
         basicbow=['Bow', 'Silver Bow'],
+        swordless_basicbow=['Bow', 'Silver Bow'],
+        legacybow=['Bow', 'Silver Arrows'],
+        swordless_legacybow=['Bow', 'Silver Arrows'],
         timedohko=['Green Clock'] * 25,
         timedother=['Green Clock'] * 20 + ['Blue Clock'] * 10 + ['Red Clock'] * 10,
         universal_keys=['Small Key (Universal)'] * 18 + ['Rupees (20)'] * 10,
@@ -123,6 +131,9 @@ difficulties = {
         basicsword=['Fighter Sword', 'Master Sword', 'Master Sword', 'Tempered Sword'],
         progressivebow=["Progressive Bow"] * 2,
         basicbow=['Bow'] * 2,
+        swordless_basicbow=['Bow', 'Silver Bow'],
+        legacybow=['Bow', 'Rupees (20)'],
+        swordless_legacybow=['Bow', 'Silver Arrows'],
         timedohko=['Green Clock'] * 25,
         timedother=['Green Clock'] * 20 + ['Blue Clock'] * 10 + ['Red Clock'] * 10,
         universal_keys=['Small Key (Universal)'] * 12 + ['Rupees (5)'] * 16,
@@ -152,6 +163,9 @@ difficulties = {
         basicsword=['Fighter Sword', 'Fighter Sword', 'Master Sword', 'Master Sword'],
         progressivebow=["Progressive Bow"] * 2,
         basicbow=['Bow'] * 2,
+        swordless_basicbow=['Bow', 'Silver Bow'],
+        legacybow=['Bow', 'Rupees (20)'],
+        swordless_legacybow=['Bow', 'Silver Arrows'],
         timedohko=['Green Clock'] * 20 + ['Red Clock'] * 5,
         timedother=['Green Clock'] * 20 + ['Blue Clock'] * 10 + ['Red Clock'] * 10,
         universal_keys=['Small Key (Universal)'] * 12 + ['Rupees (5)'] * 16,
@@ -606,15 +620,12 @@ def get_pool_core(world, player: int):
     else:
         pool.extend(diff.basicmagic)
 
-    if want_progressives():
+    if world.legacy_bow[player]:
+        pool.extend(diff.swordless_legacybow if swords == 'swordless' or logic == 'noglitches' else diff.legacybow)
+    elif want_progressives():
         pool.extend(diff.progressivebow)
-    elif swords == 'swordless' or logic == 'noglitches':
-        swordless_bows = ['Bow', 'Silver Bow']
-        if difficulty == "easy":
-            swordless_bows *= 2
-        pool.extend(swordless_bows)
     else:
-        pool.extend(diff.basicbow)
+        pool.extend(diff.swordless_basicbow if swords == 'swordless' or logic == 'noglitches' else diff.basicbow)
 
     if swords == 'swordless':
         pool.extend(diff.swordless)

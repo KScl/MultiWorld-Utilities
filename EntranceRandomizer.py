@@ -163,7 +163,16 @@ def parse_arguments(argv, no_defaults=False):
                                               be found at any time. Downgrades are not possible.
                              Random:          Swords, Shields, Armor, and Gloves will, per
                                               category, be randomly progressive or not.
-                                              Link will die in one hit.
+                             ''')
+    parser.add_argument('--legacy_bow', default=defval('off'), const='off', nargs='?', choices=['on', 'off'],
+                        help='''\
+                             Select the behavior of Bows. (default: %(default)s)
+                             On:              Bows cannot be progressive. Silver Arrows are a
+                                              separate item and do not automatically give a
+                                              bow when they are found.
+                             Off:             Bows can be progressive. If not progressive,
+                                              the Silver Bow gives both Silver Arrows and a
+                                              Bow when found.
                              ''')
     parser.add_argument('--algorithm', default=defval('balanced'), const='balanced', nargs='?',
                         choices=['freshness', 'flood', 'vt25', 'vt26', 'balanced'],
@@ -380,7 +389,7 @@ def parse_arguments(argv, no_defaults=False):
                          'shufflebosses', 'enemy_shuffle', 'enemy_health', 'enemy_damage', 'shufflepots',
                          'ow_palettes', 'uw_palettes', 'sprite', 'disablemusic', 'quickswap', 'fastmenu', 'heartcolor',
                          'heartbeep', "skip_progression_balancing", "triforce_pieces_available",
-                         "triforce_pieces_required", "shop_shuffle",
+                         "triforce_pieces_required", "shop_shuffle", 'legacy_bow',
                          'remote_items', 'progressive', 'dungeon_counters', 'glitch_boots', 'killable_thieves',
                          'tile_shuffle', 'bush_shuffle', 'shuffle_prizes', 'sprite_pool', 'dark_room_logic', 'restrict_dungeon_item_on_boss',
                          'hud_palettes', 'sword_palettes', 'shield_palettes', 'link_palettes']:

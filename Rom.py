@@ -2031,7 +2031,7 @@ def write_strings(rom, world, player, team):
 
     # We still need the older hints of course. Those are done here.
 
-    silverarrows = world.find_items('Silver Bow', player)
+    silverarrows = world.find_items('Silver Bow', player) + world.find_items('Silver Arrows', player)
     local_random.shuffle(silverarrows)
     silverarrow_hint = (
             ' %s?' % hint_text(silverarrows[0]).replace('Ganon\'s', 'my')) if silverarrows else '?\nI think not!'

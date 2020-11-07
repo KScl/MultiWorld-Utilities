@@ -78,6 +78,7 @@ def main(args, seed=None):
     world.green_clock_time = args.green_clock_time.copy()
     world.shufflepots = args.shufflepots.copy()
     world.progressive = args.progressive.copy()
+    world.legacy_bow = args.legacy_bow.copy()
     world.dungeon_counters = args.dungeon_counters.copy()
     world.glitch_boots = args.glitch_boots.copy()
     world.triforce_pieces_available = args.triforce_pieces_available.copy()

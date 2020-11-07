@@ -134,6 +134,7 @@ class World(object):
             set_player_attr('sprite_pool', [])
             set_player_attr('dark_room_logic', "lamp")
             set_player_attr('restrict_dungeon_item_on_boss', False)
+            set_player_attr('legacy_bow', False)
 
     def secure(self):
         self.random = secrets.SystemRandom()
@@ -278,7 +279,7 @@ class World(object):
                     elif self.difficulty_requirements[item.player].progressive_shield_limit >= 1:
                         ret.prog_items['Blue Shield', item.player] += 1
                 elif 'Bow' in item.name:
-                    if ret.has('Silver', item.player):
+                    if ret.has('Silver Bow', item.player):
                         pass
                     elif ret.has('Bow', item.player) and self.difficulty_requirements[item.player].progressive_bow_limit >= 2:
                         ret.prog_items['Silver Bow', item.player] += 1
@@ -614,6 +615,16 @@ class CollectionState(object):
         if self.world.retro[player]:
             return (self.has('Bow', player) or self.has('Silver Bow', player)) and self.can_buy('Single Arrow', player)
         return self.has('Bow', player) or self.has('Silver Bow', player)
+
+    def can_shoot_silver_arrows(self, player: int, ganon_room: bool) -> bool:
+        if not ganon_room and (self.world.difficulty_adjustments[player] in ['hard', 'expert']
+           or self.world.difficulty_requirements[player].progressive_bow_limit < 2):
+            return False # Can only fire Silver Arrows when at Ganon
+        elif self.world.retro[player]:
+            # Silver Arrows (legacy bow) in retro mode can be fired regardless of if the Single Arrow is bought or not.
+            return (self.has('Bow', player) and self.has('Silver Arrows', player)) \
+                    or (self.has('Silver Bow', player) and self.can_buy('Single Arrow', player))
+        return (self.has('Bow', player) and self.has('Silver Arrows', player)) or self.has('Silver Bow', player)
 
     def can_get_good_bee(self, player: int) -> bool:
         cave = self.world.get_region('Good Bee Cave', player)
