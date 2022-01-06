@@ -47,7 +47,7 @@ normalfinal25extra = ['Rupees (20)'] * 23 + ['Rupees (5)'] * 2
 Difficulty = namedtuple('Difficulty',
                         ['baseitems', 'bottles', 'bottle_count', 'same_bottle', 'progressiveshield',
                          'basicshield', 'progressivearmor', 'basicarmor', 'swordless', 'progressivemagic', 'basicmagic',
-                         'progressivesword', 'basicsword', 'progressivebow', 'basicbow', 'timedohko', 'timedother',
+                         'progressivesword', 'basicsword', 'progressivebow', 'legacybow', 'basicbow', 'timedohko', 'timedother',
                          'progressiveglove', 'basicglove', 'alwaysitems', 'legacyinsanity',
                          'universal_keys',
                          'extras', 'progressive_sword_limit', 'progressive_shield_limit',
@@ -72,6 +72,7 @@ difficulties = {
         progressivesword=['Progressive Sword'] * 8,
         basicsword=['Master Sword', 'Tempered Sword', 'Golden Sword', 'Fighter Sword'] * 2,
         progressivebow=["Progressive Bow"] * 4,
+        legacybow=['Bow', 'Silver Arrows'] * 2,
         basicbow=['Bow', 'Silver Bow'] * 2,
         timedohko=['Green Clock'] * 25,
         timedother=['Green Clock'] * 20 + ['Blue Clock'] * 10 + ['Red Clock'] * 10,
@@ -104,6 +105,7 @@ difficulties = {
         progressivesword=['Progressive Sword'] * 4,
         basicsword=['Fighter Sword', 'Master Sword', 'Tempered Sword', 'Golden Sword'],
         progressivebow=["Progressive Bow"] * 2,
+        legacybow=['Bow', 'Silver Arrows'],
         basicbow=['Bow', 'Silver Bow'],
         timedohko=['Green Clock'] * 25,
         timedother=['Green Clock'] * 20 + ['Blue Clock'] * 10 + ['Red Clock'] * 10,
@@ -136,6 +138,7 @@ difficulties = {
         progressivesword=['Progressive Sword'] * 4,
         basicsword=['Fighter Sword', 'Master Sword', 'Master Sword', 'Tempered Sword'],
         progressivebow=["Progressive Bow"] * 2,
+        legacybow=['Bow', 'Rupees (20)'],
         basicbow=['Bow'] * 2,
         timedohko=['Green Clock'] * 25,
         timedother=['Green Clock'] * 20 + ['Blue Clock'] * 10 + ['Red Clock'] * 10,
@@ -169,6 +172,7 @@ difficulties = {
         progressivesword=['Progressive Sword'] * 4,
         basicsword=['Fighter Sword', 'Fighter Sword', 'Master Sword', 'Master Sword'],
         progressivebow=["Progressive Bow"] * 2,
+        legacybow=['Bow', 'Rupees (20)'],
         basicbow=['Bow'] * 2,
         timedohko=['Green Clock'] * 20 + ['Red Clock'] * 5,
         timedother=['Green Clock'] * 20 + ['Blue Clock'] * 10 + ['Red Clock'] * 10,
@@ -205,6 +209,7 @@ for diff in {'easy', 'normal', 'hard', 'expert'}:
         progressivesword=['Nothing'] * 4,
         basicsword=['Nothing'] * 4,
         progressivebow=['Nothing'] * 2,
+        legacybow=['Nothing'] * 2,
         basicbow=['Nothing'] * 2,
         timedohko=difficulties[diff].timedohko,
         timedother=difficulties[diff].timedother,
@@ -634,6 +639,7 @@ def fill_prizes(world, attempts=15):
         else:
             raise FillError('Unable to place dungeon prizes')
 
+want_progressive_table = {'sword': "w", 'shield': "s", 'glove': "g", 'armor': "a", 'magic': "m", 'bow': "b"}
 
 def get_pool_core(world, player: int):
     progressive = world.progressive[player]
@@ -660,8 +666,12 @@ def get_pool_core(world, player: int):
         assert loc not in placed_items
         placed_items[loc] = item
 
-    def want_progressives():
-        return world.random.choice([True, False]) if progressive == 'random' else progressive == 'on'
+    def want_progressives(item_type):
+        if progressive == 'random':
+            return world.random.choice([True, False])
+        if progressive == 'off':
+            return False
+        return progressive == 'on' or (want_progressive_table[item_type] in progressive)
 
     # provide boots to major glitch dependent seeds
     if logic in {'owglitches', 'nologic'} and world.glitch_boots[player] and goal != 'icerodhunt':
@@ -669,7 +679,7 @@ def get_pool_core(world, player: int):
         pool.remove('Pegasus Boots')
         pool.append('Rupees (20)')
 
-    if want_progressives():
+    if want_progressives('glove'):
         pool.extend(diff.progressiveglove)
     else:
         pool.extend(diff.basicglove)
@@ -696,35 +706,37 @@ def get_pool_core(world, player: int):
             thisbottle = world.random.choice(diff.bottles)
         pool.append(thisbottle)
 
-    if want_progressives():
+    if want_progressives('shield'):
         pool.extend(diff.progressiveshield)
     else:
         pool.extend(diff.basicshield)
 
-    if want_progressives():
+    if want_progressives('armor'):
         pool.extend(diff.progressivearmor)
     else:
         pool.extend(diff.basicarmor)
 
-    if want_progressives():
+    if want_progressives('magic'):
         pool.extend(diff.progressivemagic)
     else:
         pool.extend(diff.basicmagic)
 
-    if want_progressives():
-        pool.extend(diff.progressivebow)
-    elif (swords == 'swordless' or logic == 'noglitches') and goal != 'icerodhunt':
-        swordless_bows = ['Bow', 'Silver Bow']
-        if difficulty == "easy":
-            swordless_bows *= 2
-        pool.extend(swordless_bows)
-    else:
+    if goal == 'icerodhunt': # It's always nothing anyway...
         pool.extend(diff.basicbow)
+    elif want_progressives('bow'):
+        pool.extend(diff.progressivebow)
+    elif (swords == 'swordless' or logic == 'noglitches'): # Silvers required regardless of difficulty
+        bow_pool = ['Bow', 'Silver Arrows'] if 'l' in progressive else ['Bow', 'Silver Bow']
+        if difficulty == "easy":
+            bow_pool *= 2
+        pool.extend(bow_pool)
+    else:
+        pool.extend(diff.legacybow if 'l' in progressive else diff.basicbow)
 
     if swords == 'swordless':
         pool.extend(diff.swordless)
     elif swords == 'vanilla':
-        swords_to_use = diff.progressivesword.copy() if want_progressives() else diff.basicsword.copy()
+        swords_to_use = diff.progressivesword.copy() if want_progressives("sword") else diff.basicsword.copy()
         world.random.shuffle(swords_to_use)
 
         place_item('Link\'s Uncle', swords_to_use.pop())
@@ -738,7 +750,7 @@ def get_pool_core(world, player: int):
         if swords_to_use:
             pool.extend(swords_to_use)
     else:
-        progressive_swords = want_progressives()
+        progressive_swords = want_progressives("sword")
         pool.extend(diff.progressivesword if progressive_swords else diff.basicsword)
         if swords == 'assured' and goal != 'icerodhunt':
             if progressive_swords:

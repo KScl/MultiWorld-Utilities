@@ -47,9 +47,12 @@ def HelmasaurKingDefeatRule(state, player: int):
 def ArrghusDefeatRule(state, player: int):
     if not state.has('Hookshot', player):
         return False
-    # TODO: ideally we would have a check for bow and silvers, which combined with the
-    # hookshot is enough. This is not coded yet because the silvers that only work in pyramid feature
-    # makes this complicated
+
+    # Hookshot + Silvers is enough on its own (if silvers can be fired outside of Ganon room)
+    # Vanilla Archipelago does not have this check
+    if state.can_shoot_silver_arrows(player):
+        return True
+
     if state.has_melee_weapon(player):
         return True
 
@@ -116,20 +119,22 @@ def GanonDefeatRule(state, player: int):
     if state.world.swords[player] == "swordless":
         return state.has('Hammer', player) and \
                state.has_fire_source(player) and \
-               state.has('Silver Bow', player) and \
-               state.can_shoot_arrows(player)
+               state.can_shoot_silver_arrows(player, True)
 
     can_hurt = state.has_beam_sword(player)
     common = can_hurt and state.has_fire_source(player)
     # silverless ganon may be needed in minor glitches
     if state.world.logic[player] in {"owglitches", "minorglitches", "none"}:
         # need to light torch a sufficient amount of times
-        return common and (state.has('Tempered Sword', player) or state.has('Golden Sword', player) or (
-                state.has('Silver Bow', player) and state.can_shoot_arrows(player)) or
-                           state.has('Lamp', player) or state.can_extend_magic(player, 12))
-
+        return common and (
+            state.has('Tempered Sword', player)
+            or state.has('Golden Sword', player)
+            or state.can_shoot_silver_arrows(player, True)
+            or state.has('Lamp', player)
+            or state.can_extend_magic(player, 12)
+        )
     else:
-        return common and state.has('Silver Bow', player) and state.can_shoot_arrows(player)
+        return common and state.can_shoot_silver_arrows(player, True)
 
 
 boss_table = {
