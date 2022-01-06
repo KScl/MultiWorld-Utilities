@@ -738,7 +738,7 @@ def get_pool_core(world, player: int):
         swords_to_use = diff.progressivesword.copy() if want_progressives("sword") else diff.basicsword.copy()
 
         # Don't shuffle first sword -- always place the first in the list at uncle
-        place_item('Link\'s Uncle', swords_to_use.pop())
+        place_item('Link\'s Uncle', swords_to_use.pop(0))
 
         world.random.shuffle(swords_to_use)
         place_item('Blacksmith', swords_to_use.pop())
