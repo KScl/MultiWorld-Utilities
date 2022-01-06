@@ -240,7 +240,7 @@ def main(args, seed=None, fish=None):
 
         if args.item_pool_remove and args.item_pool_remove[player]:
             world.item_pool_remove[player] = [item.strip() for item in args.item_pool_remove[player].split(',') if
-                                         item.strip() in item_table]
+                                         item.strip() in item_table or item.strip() in item_name_groups]
         else:
             world.item_pool_remove[player] = []
 
