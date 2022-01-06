@@ -2083,7 +2083,7 @@ def write_strings(rom, world, player, team):
                 hint = 'I thought this\nwas meant to\nbe randomized?'
             elif dest.name == 'Master Sword' and special_hint == 'tablet':
                 hint = 'Look at me!\nI am the\npedestal!'
-            elif dest.name == 'Book of Mudora':
+            elif dest.name == 'Book of Mudora' and special_hint is not False:
                 hint = 'This is a\nparadox?!'
         return hint
 
