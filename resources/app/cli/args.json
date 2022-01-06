@@ -148,6 +148,7 @@
   "red_clock_time": {},
   "blue_clock_time": {},
   "green_clock_time": {},
+  "rupoor_cost": {},
   "door_shuffle": {
     "choices": [
       "basic",
@@ -264,6 +265,8 @@
   },
   "local_items": {},
   "non_local_items": {},
+  "item_pool_extend": {},
+  "item_pool_remove": {},
   "custom": {
     "type": "bool",
     "help": "suppress"

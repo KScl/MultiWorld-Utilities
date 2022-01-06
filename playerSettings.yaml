@@ -82,6 +82,11 @@ progressive: # Enable or disable progressive items (swords, shields, bow)
   on: 50 # All items are progressive
   off: 0 # No items are progressive
   random: 0 # Randomly decides for all items. Swords could be progressive, shields might not be
+  # Fork-specific setting -- Instead of just the previous three options, you may also specify combinations of
+  # letters to define exactly which items are progressive and which items aren't
+  wsagmb: 0 # [W]eapons, [S]hields, [A]rmor, [G]loves, [M]agic upgrades, [B]ows -- identical to "on"
+  lwsagm: 0 # Identical to above, but adds [L]egacy bows -- pre-V31 bow and silver arrow split
+  # you can add more combos of these letters here
 entrance_shuffle: # Documentation: https://alttpr.com/en/options#entrance_shuffle
   none: 50 # Vanilla game map. All entrances and exits lead to their original locations. You probably want this option
   dungeonssimple: 0 # Shuffle just dungeons amongst each other, swapping dungeons entirely, so Hyrule Castle is always 1 dungeon
@@ -361,6 +366,27 @@ experimental: # Only available if the host uses the doors branch, it is ignored 
 debug: # Only available if the host uses the doors branch, it is ignored otherwise
   on: 0 # Enables debugging features. Currently, these are the Item collection counter. (overwrites total triforce pieces) and Castle Gate closed indicator.
   off: 50
+### fork-specific options ###
+rupoor_cost: # Allows you to set how many rupees are deducted when you collect (or are sent) a Rupoor.
+  10: 50
+  100: 0
+
+# Uncomment to use -- Allows you to add additional items of your choice to the pool
+# It's generally safe to add whatever you want here,
+# they're added before regular junk items are added to the pool
+# item_pool_extend:
+#   Rupoor: 20 # Shuffles 20 Rupoors into the pool
+#   Magic Upgrade (1/4): 1 # Shuffles quarter magic into the pool
+
+# Uncomment to use -- Allows you to remove items from the pool
+# This can be used to make the game harder, custom difficulty settings, etc. but should be used with caution,
+# as removing progression items from the pool will generally lead to seed generation failures.
+# This happens before junk items are added to the pool, so they generally can't be removed
+# item_pool_remove:
+#   Magic Upgrade (1/2): 1 # Removes half magic from the pool
+#   Small Key (Universal): 40 # In universal keys, removes all keys from the pool (you have to buy them yourself)
+#   Lamp: 1 # Removes the lamp from the pool entirely (set dark_room_logic to "none" first)
+
 rom:
   random_sprite_on_event: # An alternative to specifying randomonhit / randomonexit / etc... in sprite down below.
     enabled:  # If enabled, sprite down below is ignored completely, (although it may become the sprite pool)

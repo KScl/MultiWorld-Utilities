@@ -401,7 +401,6 @@ def generate_itempool(world, player: int):
     if world.custom:
         (pool, placed_items, precollected_items, clock_mode, treasure_hunt_count,
          treasure_hunt_icon) = make_custom_item_pool(world, player)
-        world.rupoor_cost = min(world.customitemarray[player][67], 9999)
     else:
         pool, placed_items, precollected_items, clock_mode, treasure_hunt_count, \
         treasure_hunt_icon, additional_triforce_pieces = get_pool_core(world, player)
@@ -782,6 +781,39 @@ def get_pool_core(world, player: int):
         treasure_hunt_count = world.triforce_pieces_required[player]
         treasure_hunt_icon = 'Triforce Piece'
 
+    if world.keyshuffle[player] == "universal":
+        pool.extend(diff.universal_keys)
+        item_to_place = 'Small Key (Universal)' if goal != 'icerodhunt' else 'Nothing'
+        if world.doorShuffle[player] != 'vanilla':
+            # Previous version of this code replaced some Rupees with universal keys
+            # as it was done last; we moved this entire section up to place keys prior
+            # to extra items, so we don't need to do that replacement
+            pool.extend([item_to_place] * world.random.randint(1, 10))
+
+        if mode == 'standard' and world.doorShuffle[player] == 'vanilla':
+            key_location = world.random.choice(['Secret Passage', 'Hyrule Castle - Boomerang Chest', 'Hyrule Castle - Map Chest', 'Hyrule Castle - Zelda\'s Chest', 'Sewers - Dark Cross'])
+            place_item(key_location, item_to_place)
+        else:
+            pool.extend([item_to_place])
+
+    # Remove requested items from pool
+    # This can be dangerous if progression items are removed, use at your own risk
+    for arg_remove in world.item_pool_remove[player]:
+        try:
+            pool.remove(arg_remove)
+            extraitems += 1
+        except ValueError:
+            pass # Silently fail
+
+    # Add requested extra items to pool
+    # This is generally safe no matter what you do, the new items are just treated as extras
+    extend_pool = world.item_pool_extend[player]
+    if extraitems >= len(extend_pool):
+        pool.extend(extend_pool)
+        extraitems -= len(extend_pool)
+    elif extraitems > 0:
+        pool.extend(world.random.sample(extend_pool, extraitems))
+
     for extra in diff.extras:
         if extraitems >= len(extra):
             pool.extend(extra)
@@ -792,29 +824,14 @@ def get_pool_core(world, player: int):
         else:
             break
 
+    if retro:
+        replace = {'Single Arrow', 'Arrows (10)', 'Arrow Upgrade (+5)', 'Arrow Upgrade (+10)'}
+        pool = ['Rupees (5)' if item in replace else item for item in pool]
+
     if goal == 'pedestal' and swords != 'vanilla':
         place_item('Master Sword Pedestal', 'Triforce')
         pool.remove("Rupees (20)")
 
-    if retro:
-        replace = {'Single Arrow', 'Arrows (10)', 'Arrow Upgrade (+5)', 'Arrow Upgrade (+10)'}
-        pool = ['Rupees (5)' if item in replace else item for item in pool]
-    if world.keyshuffle[player] == "universal":
-        pool.extend(diff.universal_keys)
-        item_to_place = 'Small Key (Universal)' if goal != 'icerodhunt' else 'Nothing'
-        if world.doorShuffle[player] != 'vanilla':
-            replace = 'Rupees (20)' if difficulty in {'easy', 'normal'} else 'Rupees (5)'
-            indices = [i for i, x in enumerate(pool) if x == replace]
-            for i in range(0, min(10, len(indices))):
-                pool[indices[i]] = 'Small Key (Universal)'
-        if mode == 'standard':
-            if world.doorShuffle[player] == 'vanilla':
-                key_location = world.random.choice(['Secret Passage', 'Hyrule Castle - Boomerang Chest', 'Hyrule Castle - Map Chest', 'Hyrule Castle - Zelda\'s Chest', 'Sewers - Dark Cross'])
-                place_item(key_location, item_to_place)
-            else:
-                pool.extend([item_to_place])
-        else:
-            pool.extend([item_to_place])
     return (pool, placed_items, precollected_items, clock_mode, treasure_hunt_count, treasure_hunt_icon,
             additional_pieces_to_place)
 

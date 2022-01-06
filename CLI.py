@@ -110,7 +110,7 @@ def parse_cli(argv, no_defaults=False):
 
             for name in ['logic', 'mode', 'swords', 'goal', 'difficulty', 'item_functionality',
                          'shuffle', 'door_shuffle', 'intensity', 'crystals_ganon', 'crystals_gt', 'open_pyramid',
-                         'countdown_start_time', 'red_clock_time', 'blue_clock_time', 'green_clock_time',
+                         'countdown_start_time', 'red_clock_time', 'blue_clock_time', 'green_clock_time', "rupoor_cost",
                          'mapshuffle', 'compassshuffle', 'keyshuffle', 'bigkeyshuffle', 'startinventory',
                          'local_items', 'non_local_items', 'retro', 'accessibility', 'hints', 'beemizer', 'experimental', 'debug', 'dungeon_counters',
                          'shufflebosses', 'enemy_shuffle', 'enemy_health', 'enemy_damage', 'shufflepots',
@@ -120,7 +120,8 @@ def parse_cli(argv, no_defaults=False):
                          'tile_shuffle', 'bush_shuffle', 'shop_shuffle', 'sprite_pool', 'dark_room_logic', 'restrict_dungeon_item_on_boss',
                          'hud_palettes', 'sword_palettes', 'shield_palettes', 'link_palettes', 'keydropshuffle', 'mixed_travel',
                          'standardize_palettes', 'plando_items', 'plando_texts', 'plando_connections', 'required_medallions',
-                         "shop_shuffle_slots", "reduceflashing", "er_seeds", "dr_seeds", "triforcehud"]:
+                         "shop_shuffle_slots", "reduceflashing", "er_seeds", "dr_seeds", "triforcehud",
+                         "item_pool_extend", "item_pool_remove"]:
                 value = getattr(defaults, name) if getattr(playerargs, name) is None else getattr(playerargs, name)
                 if player == 1:
                     setattr(ret, name, {1: value})
@@ -161,6 +162,7 @@ def parse_settings():
         "red_clock_time": -2,
         "blue_clock_time": 2,
         "green_clock_time": 4,
+        "rupoor_cost": 10,
 
         "shufflepots": False,
         "enemy_shuffle": False,
