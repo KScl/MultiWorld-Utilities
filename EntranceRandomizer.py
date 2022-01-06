@@ -138,6 +138,8 @@ def parse_arguments(argv, no_defaults=False):
                         help='''Set amount of time, in minutes, to add from picking up blue clocks; negative removes time instead''')
     parser.add_argument('--green_clock_time', default=defval(4), type=int,
                         help='''Set amount of time, in minutes, to add from picking up green clocks; negative removes time instead''')
+    parser.add_argument('--rupoor_cost', default=defval(10), type=int,
+                        help='''Amount of rupees to remove when a Rupoor is collected''')
     parser.add_argument('--dungeon_counters', default=defval('default'), const='default', nargs='?', choices=['default', 'on', 'pickup', 'off'],
                         help='''\
                              Select dungeon counter display settings. (default: %(default)s)
@@ -284,6 +286,10 @@ def parse_arguments(argv, no_defaults=False):
                         help='Specifies a list of items that will not spread across the multiworld (separated by commas)')
     parser.add_argument('--non_local_items', default=defval(''),
                         help='Specifies a list of items that will spread across the multiworld (separated by commas)')
+    parser.add_argument('--item_pool_extend', default=defval(''),
+                        help='Specifies a list of items that will be added to your item pool (separated by commas)')
+    parser.add_argument('--item_pool_remove', default=defval(''),
+                        help='Specifies a list of items that will be removed from your item pool (separated by commas)')
     parser.add_argument('--custom', default=defval(False), help='Not supported.')
     parser.add_argument('--customitemarray', default=defval(False), help='Not supported.')
     parser.add_argument('--accessibility', default=defval('items'), const='items', nargs='?', choices=['items', 'locations', 'none'], help='''\
@@ -409,7 +415,7 @@ def parse_arguments(argv, no_defaults=False):
 
             for name in ['logic', 'mode', 'swords', 'goal', 'difficulty', 'item_functionality',
                          'shuffle', 'crystals_ganon', 'crystals_gt', 'open_pyramid', 'timer',
-                         'countdown_start_time', 'red_clock_time', 'blue_clock_time', 'green_clock_time',
+                         'countdown_start_time', 'red_clock_time', 'blue_clock_time', 'green_clock_time', 'rupoor_cost',
                          'mapshuffle', 'compassshuffle', 'keyshuffle', 'bigkeyshuffle', 'startinventory',
                          'local_items', 'non_local_items', 'retro', 'accessibility', 'hints', 'beemizer',
                          'shufflebosses', 'enemy_shuffle', 'enemy_health', 'enemy_damage', 'shufflepots',
@@ -421,7 +427,8 @@ def parse_arguments(argv, no_defaults=False):
                          'remote_items', 'progressive', 'dungeon_counters', 'glitch_boots', 'killable_thieves',
                          'tile_shuffle', 'bush_shuffle', 'shuffle_prizes', 'sprite_pool', 'dark_room_logic',
                          'restrict_dungeon_item_on_boss', 'reduceflashing',
-                         'hud_palettes', 'sword_palettes', 'shield_palettes', 'link_palettes', 'triforcehud']:
+                         'hud_palettes', 'sword_palettes', 'shield_palettes', 'link_palettes', 'triforcehud',
+                         'item_pool_extend', 'item_pool_remove']:
                 value = getattr(defaults, name) if getattr(playerargs, name) is None else getattr(playerargs, name)
                 if player == 1:
                     setattr(ret, name, {1: value})

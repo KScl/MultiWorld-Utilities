@@ -641,6 +641,7 @@ def roll_settings(weights: dict, plando_options: typing.Set[str] = frozenset(("b
     ret.red_clock_time = int(get_choice('red_clock_time', weights, -2))
     ret.blue_clock_time = int(get_choice('blue_clock_time', weights, 2))
     ret.green_clock_time = int(get_choice('green_clock_time', weights, 4))
+    ret.rupoor_cost = int(get_choice('rupoor_cost', weights, 10))
 
     ret.dungeon_counters = get_choice('dungeon_counters', weights, 'default')
 
@@ -669,6 +670,28 @@ def roll_settings(weights: dict, plando_options: typing.Set[str] = frozenset(("b
         elif itemvalue:
             startitems.append(item)
     ret.startinventory = ','.join(startitems)
+
+    poolweights = weights.get('item_pool_extend', {})
+    extraitems = []
+    for item in poolweights.keys():
+        itemvalue = get_choice(item, poolweights)
+        if isinstance(itemvalue, int):
+            for i in range(int(itemvalue)):
+                extraitems.append(item)
+        elif itemvalue:
+            extraitems.append(item)
+    ret.item_pool_extend = ','.join(extraitems)
+
+    poolweights = weights.get('item_pool_remove', {})
+    removeitems = []
+    for item in poolweights.keys():
+        itemvalue = get_choice(item, poolweights)
+        if isinstance(itemvalue, int):
+            for i in range(int(itemvalue)):
+                removeitems.append(item)
+        elif itemvalue:
+            removeitems.append(item)
+    ret.item_pool_remove = ','.join(removeitems)
 
     ret.glitch_boots = get_choice('glitch_boots', weights, True)
 

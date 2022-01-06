@@ -949,7 +949,7 @@ def patch_rom(world, rom, player, team, enemized):
         rom.write_byte(0x34FD6, 0x80)
         overflow_replacement = GREEN_TWENTY_RUPEES
         # Rupoor negative value
-        rom.write_int16(0x180036, world.rupoor_cost)
+        rom.write_int16(0x180036, world.rupoor_cost[player])
         # Set stun items
         rom.write_byte(0x180180, 0x02)  # Hookshot only
     elif world.item_functionality[player] == 'expert':
@@ -969,7 +969,7 @@ def patch_rom(world, rom, player, team, enemized):
         rom.write_byte(0x34FD6, 0x80)
         overflow_replacement = GREEN_TWENTY_RUPEES
         # Rupoor negative value
-        rom.write_int16(0x180036, world.rupoor_cost)
+        rom.write_int16(0x180036, world.rupoor_cost[player])
         # Set stun items
         rom.write_byte(0x180180, 0x00)  # Nothing
     else:
@@ -988,7 +988,7 @@ def patch_rom(world, rom, player, team, enemized):
         # Enable catching fairies
         rom.write_byte(0x34FD6, 0xF0)
         # Rupoor negative value
-        rom.write_int16(0x180036, world.rupoor_cost)
+        rom.write_int16(0x180036, world.rupoor_cost[player])
         # Set stun items
         rom.write_byte(0x180180, 0x03)  # All standard items
         # Set overflow items for progressive equipment

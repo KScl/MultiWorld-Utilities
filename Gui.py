@@ -405,6 +405,7 @@ def guiMain(args=None):
         guiargs.red_clock_time = timerRedVar.get()
         guiargs.blue_clock_time = timerBlueVar.get()
         guiargs.green_clock_time = timerGreenVar.get()
+        guiargs.rupoor_cost = 10
         guiargs.skip_progression_balancing = not balancingVar.get()
         if guiargs.timer == "none":
             guiargs.timer = False

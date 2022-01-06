@@ -87,6 +87,7 @@ def main(args, seed=None):
     world.red_clock_time = args.red_clock_time.copy()
     world.blue_clock_time = args.blue_clock_time.copy()
     world.green_clock_time = args.green_clock_time.copy()
+    world.rupoor_cost = args.rupoor_cost.copy()
     world.shufflepots = args.shufflepots.copy()
     world.progressive = args.progressive.copy()
     world.dungeon_counters = args.dungeon_counters.copy()
@@ -182,6 +183,18 @@ def main(args, seed=None):
         # Not possible to place pendants/crystals out side of boss prizes yet.
         world.non_local_items[player] -= item_name_groups['Pendants']
         world.non_local_items[player] -= item_name_groups['Crystals']
+
+        if args.item_pool_extend and args.item_pool_extend[player]:
+            world.item_pool_extend[player] = [item.strip() for item in args.item_pool_extend[player].split(',') if
+                                         item.strip() in item_table]
+        else:
+            world.item_pool_extend[player] = []
+
+        if args.item_pool_remove and args.item_pool_remove[player]:
+            world.item_pool_remove[player] = [item.strip() for item in args.item_pool_remove[player].split(',') if
+                                         item.strip() in item_table]
+        else:
+            world.item_pool_remove[player] = []
 
         world.triforce_pieces_available[player] = max(world.triforce_pieces_available[player], world.triforce_pieces_required[player])
 

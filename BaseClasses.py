@@ -68,7 +68,6 @@ class World(object):
         self.required_locations = []
         self.light_world_light_cone = False
         self.dark_world_light_cone = False
-        self.rupoor_cost = 10
         self.aga_randomness = True
         self.lock_aga_door_in_escape = False
         self.save_and_quit_from_boss = True
@@ -128,11 +127,14 @@ class World(object):
             set_player_attr('red_clock_time', -2)
             set_player_attr('blue_clock_time', 2)
             set_player_attr('green_clock_time', 4)
+            set_player_attr('rupoor_cost', 10)
             set_player_attr('can_take_damage', True)
             set_player_attr('glitch_boots', True)
             set_player_attr('progression_balancing', True)
             set_player_attr('local_items', set())
             set_player_attr('non_local_items', set())
+            set_player_attr('item_pool_extend', set())
+            set_player_attr('item_pool_remove', set())
             set_player_attr('triforce_pieces_available', 30)
             set_player_attr('triforce_pieces_required', 20)
             set_player_attr('shop_shuffle', 'off')
