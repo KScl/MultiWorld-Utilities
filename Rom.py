@@ -2245,23 +2245,32 @@ def write_strings(rom, world, player, team):
     if world.mode[player] == 'inverted':
         tt['sign_village_of_outcasts'] = 'attention\nferal ducks sighted\nhiding in statues\n\nflute players beware\n'
 
-    def hint_text(dest, ped_hint=False):
+    def hint_text(dest, special_hint=False):
         if not dest:
             return "nothing"
-        if ped_hint:
+        if special_hint is not False:
             hint = dest.pedestal_hint_text if dest.pedestal_hint_text else "unknown item"
         else:
             if isinstance(dest, Region) and dest.type == RegionType.Dungeon and dest.dungeon:
                 hint = dest.dungeon.name
             else:
                 hint = dest.hint_text if dest.hint_text else "something"
+
         if dest.player != player:
-            if ped_hint:
+            if special_hint is not False:
                 hint += f" for {world.player_names[dest.player][team]}!"
             elif type(dest) in [Region, Location]:
                 hint += f" in {world.player_names[dest.player][team]}'s world"
             else:
                 hint += f" for {world.player_names[dest.player][team]}"
+        else:
+            # Special pedestal/tablet hints for certain local items
+            if dest.name == 'Master Sword' and special_hint == 'pedestal':
+                hint = 'I thought this\nwas meant to\nbe randomized?'
+            elif dest.name == 'Master Sword' and special_hint == 'tablet':
+                hint = 'Look at me!\nI am the\npedestal!'
+            elif dest.name == 'Book of Mudora':
+                hint = 'This is a\nparadox?!'
         return hint
 
     # For hints, first we write hints about entrances, some from the inconvenient list others from all reasonable entrances.
@@ -2555,17 +2564,17 @@ def write_strings(rom, world, player, team):
 
     pedestalitem = world.get_location('Master Sword Pedestal', player).item
     pedestal_text = 'Some Hot Air' if pedestalitem is None else hint_text(pedestalitem,
-                                                                          True) if pedestalitem.pedestal_hint_text is not None else 'Unknown Item'
+                                                                          "pedestal") if pedestalitem.pedestal_hint_text is not None else 'Unknown Item'
     tt['mastersword_pedestal_translated'] = pedestal_text
     pedestal_credit_text = 'and the Hot Air' if pedestalitem is None else pedestalitem.pedestal_credit_text if pedestalitem.pedestal_credit_text is not None else 'and the Unknown Item'
 
     etheritem = world.get_location('Ether Tablet', player).item
     ether_text = 'Some Hot Air' if etheritem is None else hint_text(etheritem,
-                                                                    True) if etheritem.pedestal_hint_text is not None else 'Unknown Item'
+                                                                    "tablet") if etheritem.pedestal_hint_text is not None else 'Unknown Item'
     tt['tablet_ether_book'] = ether_text
     bombositem = world.get_location('Bombos Tablet', player).item
     bombos_text = 'Some Hot Air' if bombositem is None else hint_text(bombositem,
-                                                                      True) if bombositem.pedestal_hint_text is not None else 'Unknown Item'
+                                                                      "tablet") if bombositem.pedestal_hint_text is not None else 'Unknown Item'
     tt['tablet_bombos_book'] = bombos_text
 
     # inverted spawn menu changes
