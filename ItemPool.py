@@ -474,14 +474,14 @@ def generate_itempool(world, player: int):
 
     # logic has some branches where having 4 hearts is one possible requirement (of several alternatives)
     # rather than making all hearts/heart pieces progression items (which slows down generation considerably)
-    # We mark one random heart container as an advancement item (or 4 heart pieces in expert mode)
-    if world.goal[player] != 'icerodhunt' and world.difficulty[player] in ['easy', 'normal', 'hard'] and not (world.custom and world.customitemarray[30] == 0):
-        next(item for item in items if item.name == 'Boss Heart Container').advancement = True
-    elif world.goal[player] != 'icerodhunt' and world.difficulty[player] in ['expert'] and not (world.custom and world.customitemarray[29] < 4):
-        adv_heart_pieces = (item for item in items if item.name == 'Piece of Heart')
-        for i in range(4):
-            next(adv_heart_pieces).advancement = True
-
+    # We mark one random heart container as an advancement item (or 4 heart pieces if none present, e.g. in expert mode)
+    adv_hearts = [('Boss Heart Container', 1), ('Piece of Heart', 4), ('Sanctuary Heart Container', 1)]
+    for (adv_item, adv_required) in adv_hearts:
+        adv_items = [item for item in items if item.name == adv_item]
+        if len(adv_items) >= adv_required:
+            for i in range(adv_required):
+                adv_items[i].advancement = True
+            break
 
     progressionitems = []
     nonprogressionitems = []
