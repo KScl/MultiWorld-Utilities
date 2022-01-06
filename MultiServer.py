@@ -111,7 +111,7 @@ class Context(Node):
         self.auto_save_interval = 60  # in seconds
         self.auto_saver_thread = None
         self.save_dirty = False
-        self.tags = ['Berserker']
+        self.tags = ['Berserker', 'KScl-fork']
         self.minimum_client_versions: typing.Dict[typing.Tuple[int, int], Utils.Version] = {}
 
     def load(self, multidatapath: str, use_embedded_server_options: bool = False):

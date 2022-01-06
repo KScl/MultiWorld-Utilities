@@ -1003,7 +1003,7 @@ async def process_server_cmd(ctx: Context, cmd, args):
 
 
 def get_tags(ctx: Context):
-    tags = ['Berserker']
+    tags = ['Berserker', 'KScl-fork']
     if ctx.found_items:
         tags.append('FoundItems')
     return tags
