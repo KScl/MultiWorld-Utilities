@@ -133,11 +133,23 @@ def fill_dungeons_restrictive(world):
             all_state_base.collect(item, True)
             item.advancement = True
 
-    dungeon_items = [item for item in get_dungeon_item_pool(world) if (((item.smallkey and not world.keyshuffle[item.player])
-                                                                       or (item.bigkey and not world.bigkeyshuffle[item.player])
-                                                                       or (item.map and not world.mapshuffle[item.player])
-                                                                       or (item.compass and not world.compassshuffle[item.player])
-                                                                        ) and world.goal[item.player] != 'icerodhunt')]  #
+    # pull plandoed dungeon items out of the item pool
+    # this is a kinda-experimental fix for an already rare situation
+    import logging
+    plando_items = [location.item for location in world.get_plando_locations() if location.plando.from_pool]
+
+    dungeon_items = []
+    for item in [item for item in get_dungeon_item_pool(world) if (((item.smallkey and not world.keyshuffle[item.player])
+                                                                    or (item.bigkey and not world.bigkeyshuffle[item.player])
+                                                                    or (item.map and not world.mapshuffle[item.player])
+                                                                    or (item.compass and not world.compassshuffle[item.player])
+                                                                    ) and world.goal[item.player] != 'icerodhunt')]:
+        if item in plando_items:
+            logging.info(f"Removing P{item.player}'s {item.name} from dungeon items as it was plandoed")
+            plando_items.remove(item)
+            continue
+        dungeon_items.append(item)
+
     if dungeon_items:
         # sort in the order Big Key, Small Key, Other before placing dungeon items
         sort_order = {"BigKey": 3, "SmallKey": 2}

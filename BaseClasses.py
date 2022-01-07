@@ -384,6 +384,9 @@ class World(object):
     def get_unfilled_dungeon_locations(self):
         return [location for location in self.get_locations() if not location.item and location.parent_region.dungeon]
 
+    def get_plando_locations(self, player=None):
+        return [location for location in self.get_locations() if location.plando]
+
     def get_filled_locations(self, player=None) -> list:
         if player is not None:
             return [location for location in self.get_locations() if
@@ -1102,6 +1105,7 @@ class Location():
     event: bool = False
     locked: bool = False
     spot_type = 'Location'
+    plando = None
 
     def __init__(self, player: int, name: str = '', address=None, crystal: bool = False,
                  hint_text: Optional[str] = None, parent=None,
