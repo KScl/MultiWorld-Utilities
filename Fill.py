@@ -461,6 +461,7 @@ def distribute_planned(world):
                 world.push_item(location, item, collect=False)
                 location.event = True  # flag location to be checked during fill
                 location.locked = True
+                location.plando = placement
                 logging.debug(f"Plando placed {item} at {location}")
             else:
                 placement.failed(f"Can't place {item} at {location} due to fill condition not met.")
