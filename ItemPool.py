@@ -641,11 +641,20 @@ def get_pool_core(world, player: int):
     if swords == 'swordless':
         pool.extend(diff.swordless)
     elif swords == 'vanilla':
-        swords_to_use = diff.progressivesword.copy() if want_progressives("sword") else diff.basicsword.copy()
+        swords_to_use = diff.progressivesword.copy()
+        if not want_progressives("sword"):
+            # Place Fighter Sword & Shield at Uncle (vanilla & pre-progressive VT behavior)
+            swords_to_use = diff.basicsword.copy()
+            swords_to_use.remove('Fighter Sword') # Only one of them, for Expert has two
+            place_item('Link\'s Uncle', 'Fighter Sword & Shield')
 
-        # Don't shuffle first sword -- always place the first in the list at uncle
-        place_item('Link\'s Uncle', swords_to_use.pop(0))
-
+            # Replace non-progressive Fighter Shield with a big 20
+            if 'Blue Shield' in pool:
+                pool.remove('Blue Shield')
+                pool.append('Rupees (20)')
+        else:
+            place_item('Link\'s Uncle', swords_to_use.pop())
+ 
         world.random.shuffle(swords_to_use)
         place_item('Blacksmith', swords_to_use.pop())
         place_item('Pyramid Fairy - Left', swords_to_use.pop())
