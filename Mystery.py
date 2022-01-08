@@ -348,6 +348,30 @@ def update_weights(weights: dict, new_weights: dict, type: str, name: str) -> di
                             f'This is probably in error.')
     return weights
 
+def append_weights(weights: dict, new_weights: dict, wtype: str) -> dict:
+    logging.debug(f'Appending {new_weights}')
+    for (option_name, option) in new_weights.items():
+        new_option = weights.get(option_name)
+
+        if new_option is None: # If not present, just add in whatever we've got.
+            new_option = option
+        elif type(new_option) is list:
+            new_option.extend(option)
+        elif type(new_option) is dict:
+            # Loop over new setting, add any new items and increment ones that exist already
+            for (item, count) in option.items():
+                if item not in new_option:
+                    new_option[item] = count
+                elif type(new_option[item]) is int:
+                    new_option[item] += count
+                else:
+                    raise ValueError(f'{wtype} Suboption can\'t append to root option "{option_name}"')
+        else:
+            raise ValueError(f'{wtype} Suboption can\'t append to root option "{option_name}"')
+
+        weights[option_name] = new_option
+    return weights
+
 def roll_linked_options(weights: dict) -> dict:
     weights = weights.copy()  # make sure we don't write back to other weights sets in same_settings
     for option_set in weights["linked_options"]:
@@ -358,6 +382,8 @@ def roll_linked_options(weights: dict) -> dict:
                 logging.debug(f"Linked option {option_set['name']} triggered.")
                 if "options" in option_set:
                     weights = update_weights(weights, option_set["options"], "Linked", option_set["name"])
+                if "append" in option_set:
+                    weights = append_weights(weights, option_set["append"], "Linked Append")
                 if "rom_options" in option_set:
                     rom_weights = weights.get("rom", dict())
                     rom_weights = update_weights(rom_weights, option_set["rom_options"], "Linked Rom", option_set["name"])
@@ -384,6 +410,8 @@ def roll_triggers(weights: dict) -> dict:
             if result == trigger_result and roll_percentage(get_choice("percentage", option_set, 100)):
                 if "options" in option_set:
                     weights = update_weights(weights, option_set["options"], "Triggered", option_set["option_name"])
+                if "append" in option_set:
+                    weights = append_weights(weights, option_set["append"], "Triggered Append")
                 if "rom_options" in option_set:
                     rom_weights = weights.get("rom", dict())
                     rom_weights = update_weights(rom_weights, option_set["rom_options"], "Triggered Rom", option_set["option_name"])
