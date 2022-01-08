@@ -1055,9 +1055,8 @@ def patch_rom(world, rom, player, team, enemized, is_mystery=False):
         rom.write_byte(0x180032, 0x00)  # standard mode
 
     uncle_location = world.get_location('Link\'s Uncle', player)
-    if uncle_location.item is None or uncle_location.item.name not in ['Master Sword', 'Tempered Sword',
-                                                                       'Fighter Sword', 'Golden Sword',
-                                                                       'Progressive Sword']:
+    if uncle_location.item is None or uncle_location.item.name not in \
+        ['Master Sword', 'Tempered Sword', 'Fighter Sword', 'Golden Sword', 'Progressive Sword', 'Fighter Sword & Shield']:
         # disable sword sprite from uncle
         rom.write_bytes(0x6D263, [0x00, 0x00, 0xf6, 0xff, 0x00, 0x0E])
         rom.write_bytes(0x6D26B, [0x00, 0x00, 0xf6, 0xff, 0x00, 0x0E])
@@ -1069,6 +1068,15 @@ def patch_rom(world, rom, player, team, enemized, is_mystery=False):
         rom.write_bytes(0x6D2EB, [0x00, 0x00, 0xf7, 0xff, 0x02, 0x0E])
         rom.write_bytes(0x6D31B, [0x00, 0x00, 0xe4, 0xff, 0x08, 0x0E])
         rom.write_bytes(0x6D323, [0x00, 0x00, 0xe4, 0xff, 0x08, 0x0E])
+    if uncle_location.item is None or uncle_location.item.name != 'Fighter Sword & Shield':
+        # remove shield from uncle
+        rom.write_bytes(0x6D253, [0x00, 0x00, 0xf6, 0xff, 0x00, 0x0E])
+        rom.write_bytes(0x6D25B, [0x00, 0x00, 0xf6, 0xff, 0x00, 0x0E])
+        rom.write_bytes(0x6D283, [0x00, 0x00, 0xf6, 0xff, 0x00, 0x0E])
+        rom.write_bytes(0x6D28B, [0x00, 0x00, 0xf7, 0xff, 0x00, 0x0E])
+        rom.write_bytes(0x6D2CB, [0x00, 0x00, 0xf6, 0xff, 0x02, 0x0E])
+        rom.write_bytes(0x6D2FB, [0x00, 0x00, 0xf7, 0xff, 0x02, 0x0E])
+        rom.write_bytes(0x6D313, [0x00, 0x00, 0xe4, 0xff, 0x08, 0x0E])
 
     # set light cones
     rom.write_byte(0x180038, 0x01 if world.sewer_light_cone[player] else 0x00)
@@ -1423,6 +1431,10 @@ def patch_rom(world, rom, player, team, enemized, is_mystery=False):
     elif startingstate.has('Power Glove', player):
         equip[0x354] = 1
 
+    if startingstate.has('Fighter Sword & Shield', player):
+        equip[0x359] = 1
+        equip[0x35A] = 1
+
     if startingstate.has('Golden Sword', player):
         equip[0x359] = 4
     elif startingstate.has('Tempered Sword', player):
@@ -1458,6 +1470,7 @@ def patch_rom(world, rom, player, team, enemized, is_mystery=False):
         if item.name in {'Bow', 'Silver Bow', 'Silver Arrows', 'Progressive Bow', 'Progressive Bow (Alt)',
                          'Titans Mitts', 'Power Glove', 'Progressive Glove',
                          'Golden Sword', 'Tempered Sword', 'Master Sword', 'Fighter Sword', 'Progressive Sword',
+                         'Fighter Sword & Shield',
                          'Mirror Shield', 'Red Shield', 'Blue Shield', 'Progressive Shield',
                          'Red Mail', 'Blue Mail', 'Progressive Mail',
                          'Magic Upgrade (1/4)', 'Magic Upgrade (1/2)'}:
@@ -1705,15 +1718,6 @@ def patch_rom(world, rom, player, team, enemized, is_mystery=False):
     rom.write_byte(0x186383, 0x01 if world.glitch_triforce or world.logic[
         player] == 'nologic' else 0x00)  # disable glitching to Triforce from Ganons Room
     rom.write_byte(0x180042, 0x01 if world.save_and_quit_from_boss else 0x00)  # Allow Save and Quit after boss kill
-
-    # remove shield from uncle
-    rom.write_bytes(0x6D253, [0x00, 0x00, 0xf6, 0xff, 0x00, 0x0E])
-    rom.write_bytes(0x6D25B, [0x00, 0x00, 0xf6, 0xff, 0x00, 0x0E])
-    rom.write_bytes(0x6D283, [0x00, 0x00, 0xf6, 0xff, 0x00, 0x0E])
-    rom.write_bytes(0x6D28B, [0x00, 0x00, 0xf7, 0xff, 0x00, 0x0E])
-    rom.write_bytes(0x6D2CB, [0x00, 0x00, 0xf6, 0xff, 0x02, 0x0E])
-    rom.write_bytes(0x6D2FB, [0x00, 0x00, 0xf7, 0xff, 0x02, 0x0E])
-    rom.write_bytes(0x6D313, [0x00, 0x00, 0xe4, 0xff, 0x08, 0x0E])
 
     rom.write_byte(0x18004E, 0)  # Escape Fill (nothing)
     rom.write_int16(0x180183, 300)  # Escape fill rupee bow
@@ -3075,6 +3079,7 @@ RelevantItems = ['Bow',
                  'Tempered Sword',
                  'Fighter Sword',
                  'Golden Sword',
+                 'Fighter Sword & Shield',
                  'Progressive Sword',
                  'Progressive Glove',
                  'Master Sword',

@@ -366,6 +366,11 @@ class World(object):
             elif item.name.startswith('Bottle'):
                 if ret.bottle_count(item.player) < self.difficulty_requirements[item.player].progressive_bottle_limit:
                     ret.prog_items[item.name, item.player] += 1
+            elif item.name == 'Fighter Sword & Shield':
+                if not ret.has('Fighter Sword', item.player):
+                    ret.prog_items['Fighter Sword', item.player] += 1
+                if not ret.has('Blue Shield', item.player):
+                    ret.prog_items['Blue Shield', item.player] += 1
             elif item.advancement or item.smallkey or item.bigkey:
                 ret.prog_items[item.name, item.player] += 1
 
@@ -988,6 +993,13 @@ class CollectionState(object):
             if self.bottle_count(item.player) < self.world.difficulty_requirements[item.player].progressive_bottle_limit:
                 self.prog_items[item.name, item.player] += 1
                 changed = True
+        elif item.name == 'Fighter Sword & Shield':
+            if not self.has('Fighter Sword', item.player):
+                self.prog_items['Fighter Sword', item.player] += 1
+                changed = True
+            if not self.has('Blue Shield', item.player):
+                self.prog_items['Blue Shield', item.player] += 1
+                changed = True
         elif event or item.advancement:
             self.prog_items[item.name, item.player] += 1
             changed = True
@@ -1037,12 +1049,18 @@ class CollectionState(object):
                         to_remove = 'Bow'
                     else:
                         to_remove = None
+            elif to_remove == 'Fighter Sword & Shield':
+                to_remove = ['Fighter Sword', 'Blue Shield']
 
             if to_remove is not None:
+                if type(to_remove) is not list:
+                    to_remove = [to_remove]
 
-                self.prog_items[to_remove, item.player] -= 1
-                if self.prog_items[to_remove, item.player] < 1:
-                    del (self.prog_items[to_remove, item.player])
+                for lost_item in to_remove:
+                    self.prog_items[lost_item, item.player] -= 1
+                    if self.prog_items[lost_item, item.player] < 1:
+                        del (self.prog_items[lost_item, item.player])
+
                 # invalidate caches, nothing can be trusted anymore now
                 self.reachable_regions[item.player] = dict()
                 self.blocked_connections[item.player] = dict()
