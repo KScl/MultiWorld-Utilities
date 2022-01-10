@@ -638,10 +638,7 @@ def fill_prizes(world, attempts=15):
         else:
             raise FillError('Unable to place dungeon prizes')
 
-want_progressive_table = {'sword': "w", 'shield': "s", 'glove': "g", 'armor': "a", 'magic': "m", 'bow': "b"}
-
 def get_pool_core(world, player: int):
-    progressive = world.progressive[player]
     shuffle = world.shuffle[player]
     difficulty = world.difficulty[player]
     timer = world.timer[player]
@@ -665,23 +662,13 @@ def get_pool_core(world, player: int):
         assert loc not in placed_items
         placed_items[loc] = item
 
-    def want_progressives(item_type):
-        if progressive == 'random':
-            return world.random.choice([True, False])
-        if progressive == 'off':
-            return False
-        return progressive == 'on' or (want_progressive_table[item_type] in progressive)
-
     # provide boots to major glitch dependent seeds
     if logic in {'owglitches', 'nologic'} and world.glitch_boots[player] and goal != 'icerodhunt':
         precollected_items.append('Pegasus Boots')
         pool.remove('Pegasus Boots')
         pool.append('Rupees (20)')
 
-    if want_progressives('glove'):
-        pool.extend(diff.progressiveglove)
-    else:
-        pool.extend(diff.basicglove)
+    pool.extend(diff.progressiveglove if world.want_progressives(player, 'glove') else diff.basicglove)
 
     # insanity legacy shuffle doesn't have fake LW/DW logic so for now guaranteed Mirror and Moon Pearl at the start
     if shuffle == 'insanity_legacy':
@@ -705,38 +692,27 @@ def get_pool_core(world, player: int):
             thisbottle = world.random.choice(diff.bottles)
         pool.append(thisbottle)
 
-    if want_progressives('shield'):
-        pool.extend(diff.progressiveshield)
-    else:
-        pool.extend(diff.basicshield)
-
-    if want_progressives('armor'):
-        pool.extend(diff.progressivearmor)
-    else:
-        pool.extend(diff.basicarmor)
-
-    if want_progressives('magic'):
-        pool.extend(diff.progressivemagic)
-    else:
-        pool.extend(diff.basicmagic)
+    pool.extend(diff.progressiveshield if world.want_progressives(player, 'shield') else diff.basicshield)
+    pool.extend(diff.progressivearmor if world.want_progressives(player, 'armor') else diff.basicarmor)
+    pool.extend(diff.progressivemagic if world.want_progressives(player, 'capacity') else diff.basicmagic)
 
     if goal == 'icerodhunt': # It's always nothing anyway...
         pool.extend(diff.basicbow)
-    elif want_progressives('bow'):
+    elif world.want_progressives(player, 'bow'):
         pool.extend(diff.progressivebow)
     elif (swords == 'swordless' or logic == 'noglitches'): # Silvers required regardless of difficulty
-        bow_pool = ['Bow', 'Silver Arrows'] if 'l' in progressive else ['Bow', 'Silver Bow']
+        bow_pool = ['Bow', 'Silver Arrows'] if 'l' in world.progressive[player] else ['Bow', 'Silver Bow']
         if difficulty == "easy":
             bow_pool *= 2
         pool.extend(bow_pool)
     else:
-        pool.extend(diff.legacybow if 'l' in progressive else diff.basicbow)
+        pool.extend(diff.legacybow if 'l' in world.progressive[player] else diff.basicbow)
 
     if swords == 'swordless':
         pool.extend(diff.swordless)
     elif swords == 'vanilla':
         swords_to_use = diff.progressivesword.copy()
-        if not want_progressives("sword"):
+        if not world.want_progressives(player, "sword"):
             # Place Fighter Sword & Shield at Uncle (vanilla & pre-progressive VT behavior)
             swords_to_use = diff.basicsword.copy()
             swords_to_use.remove('Fighter Sword') # Only one of them, for Expert has two
@@ -760,7 +736,7 @@ def get_pool_core(world, player: int):
         if swords_to_use:
             pool.extend(swords_to_use)
     else:
-        progressive_swords = want_progressives("sword")
+        progressive_swords = world.want_progressives(player, "sword")
         pool.extend(diff.progressivesword if progressive_swords else diff.basicsword)
         if swords == 'assured' and goal != 'icerodhunt':
             if progressive_swords:

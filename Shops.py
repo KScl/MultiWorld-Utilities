@@ -163,6 +163,7 @@ def ShopSlotFill(world):
         blacklist_words = {item_name for item_name in item_table if any(
             blacklist_word in item_name for blacklist_word in blacklist_words)}
         blacklist_words.add("Bee")
+        blacklist_words.add("Rupoor") # lol
 
         locations_per_sphere = list(list(sphere) for sphere in world.get_spheres())
 
@@ -248,7 +249,10 @@ def create_shops(world, player: int):
     world.random.shuffle(single_purchase_slots)
 
     if 'g' in option or 'f' in option:
-        default_shop_table = [i for l in [shop_generation_types[x] for x in ['arrows', 'bombs', 'potions', 'shields', 'bottle'] if not world.retro[player] or x != 'arrows'] for i in l]
+        shop_types_available = ['bombs', 'potions', 'shields', 'bottle']
+        shop_types_available.append('arrows') if not world.retro[player] else None
+        shop_types_available.append('time') if world.timer[player] in ['timed', 'timed-countdown', 'timed-ohko'] else None
+        default_shop_table = [i for l in [shop_generation_types[x] for x in shop_types_available] for i in l]
         new_basic_shop = world.random.sample(default_shop_table, k=3)
         new_dark_shop = world.random.sample(default_shop_table, k=3)
         for name, shop in player_shop_table.items():
@@ -354,7 +358,7 @@ shop_generation_types = {
     'potions': [('Red Potion', 150), ('Green Potion', 90), ('Blue Potion', 190)],
     'discount_potions': [('Red Potion', 120), ('Green Potion', 60), ('Blue Potion', 160)],
     'bottle': [('Small Heart', 10), ('Apple', 50), ('Bee', 10), ('Good Bee', 100), ('Faerie', 100), ('Magic Jar', 100)],
-    'time': [('Red Clock', 100), ('Blue Clock', 200), ('Green Clock', 300)],
+    'time': [('Blue Clock', 300), ('Green Clock', 500)],
 }
 
 
@@ -388,8 +392,7 @@ def set_up_shops(world, player: int):
 def shuffle_shops(world, items, player: int):
     option = world.shop_shuffle[player]
     if 'u' in option:
-        progressive = world.progressive[player]
-        progressive = world.random.choice([True, False]) if progressive == 'random' else progressive == 'on'
+        progressive = world.want_progressives(player, 'capacity')
         progressive &= world.goal == 'icerodhunt'
         new_items = ["Bomb Upgrade (+5)"] * 6
         new_items.append("Bomb Upgrade (+5)" if progressive else "Bomb Upgrade (+10)")

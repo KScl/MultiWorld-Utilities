@@ -84,8 +84,8 @@ progressive: # Enable or disable progressive items (swords, shields, bow)
   random: 0 # Randomly decides for all items. Swords could be progressive, shields might not be
   # Fork-specific setting -- Instead of just the previous three options, you may also specify combinations of
   # letters to define exactly which items are progressive and which items aren't
-  wsagmb: 0 # [W]eapons, [S]hields, [A]rmor, [G]loves, [M]agic upgrades, [B]ows -- identical to "on"
-  lwsagm: 0 # Identical to above, but adds [L]egacy bows -- pre-V31 bow and silver arrow split
+  wsagcb: 0 # [W]eapons, [S]hields, [A]rmor, [G]loves, [C]apacity upgrades, [B]ows -- identical to "on"
+  lwsagc: 0 # Identical to above, but adds [L]egacy bows -- pre-V31 bow and silver arrow split
   # you can add more combos of these letters here
 entrance_shuffle: # Documentation: https://alttpr.com/en/options#entrance_shuffle
   none: 50 # Vanilla game map. All entrances and exits lead to their original locations. You probably want this option
