@@ -569,15 +569,15 @@ item_table = {
     'Return Smith':                   (True, 'Event', None),
     'Pick Up Purple Chest':           (True, 'Event', None),
     'Open Floodgate':                 (True, 'Event', None),
-    'Trench 1 Filled':                (True, 'Event', None),
-    'Trench 2 Filled':                (True, 'Event', None),
-    'Drained Swamp':                  (True, 'Event', None),
-    'Shining Light':                  (True, 'Event', None),
-    'Maiden Rescued':                 (True, 'Event', None),
-    'Maiden Unmasked':                (True, 'Event', None),
-    'Convenient Block':               (True, 'Event', None),
-    'Zelda Herself':                  (True, 'Event', None),
-    'Zelda Delivered':                (True, 'Event', None),
+    'Trench 1 Filled':                (True, 'Event', None), # Event only used in doors branch
+    'Trench 2 Filled':                (True, 'Event', None), # Event only used in doors branch
+    'Drained Swamp':                  (True, 'Event', None), # Event only used in doors branch
+    'Shining Light':                  (True, 'Event', None), # Event only used in doors branch
+    'Maiden Rescued':                 (True, 'Event', None), # Event only used in doors branch
+    'Maiden Unmasked':                (True, 'Event', None), # Event only used in doors branch
+    'Convenient Block':               (True, 'Event', None), # Event only used in doors branch
+    'Zelda Herself':                  (True, 'Event', None), # Event only used in doors branch
+    'Zelda Delivered':                (True, 'Event', None), # Event only used in doors branch
 }
 
 lookup_id_to_name = {data[2]: name for name, data in item_table.items()}
