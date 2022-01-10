@@ -85,7 +85,7 @@ Uncle_texts = [
 Triforce_texts = [
                      'Product has Hole in center. Bad seller, 0 out of 5.',
                      'Who stole the fourth triangle?',
-                     'Trifource?\nMore Like Tritrice, am I right?'
+                     'Trifource?\nMore Like Tritrice, am I right?',
                      '\n  Well Done!',
                      'You just wasted 2 hours of your life.',
                      'This was meant to be a trapezoid\n   Success!',  # Contributed by caitsith2
@@ -97,7 +97,7 @@ Triforce_texts = [
     " Thanks for\n  playing!!!",
     "\n  You Win!",
     "  Thank you!\n  Your quest\n   is over.",
-    "Your princess \n is in another\n castle."
+    "Your princess \n is in another\n castle.",
     "\n  I'm sorry",
     "  Whelp…\n   that just\n    happened",
     "   Oh hey…\n    it's you",
