@@ -7,7 +7,7 @@ from Bosses import place_bosses
 from Dungeons import get_dungeon_item_pool
 from EntranceShuffle import connect_entrance
 from Fill import FillError, fill_restrictive
-from Items import ItemFactory, GetBeemizerItem
+from Items import ItemFactory, GetBeemizerItem, item_name_groups
 from Rules import forbid_items_for_player
 
 # This file sets the item pools for various modes. Timed modes and triforce hunt are enforced first, and then extra items are specified per mode to fill in the remaining space.
@@ -701,9 +701,12 @@ def get_pool_core(world, player: int):
     # This can be dangerous if progression items are removed, use at your own risk
     for arg_remove in world.item_pool_remove[player]:
         try:
+            if arg_remove in item_name_groups: # Allow choosing from an item group name
+                choices = [i for i in pool if i in item_name_groups[arg_remove]]
+                arg_remove = world.random.choice(choices)
             pool.remove(arg_remove)
             extraitems += 1
-        except ValueError:
+        except Exception:
             pass # Silently fail
 
     # Add requested extra items to pool
