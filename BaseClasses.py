@@ -547,6 +547,16 @@ class World(object):
 
         return False
 
+    # Moved out of get_pool_core 
+    def want_progressives(self, player, item_type):
+        wanted_table = {'sword': "w", 'shield': "s", 'glove': "g", 'armor': "a", 'capacity': "c", 'bow': "b"}
+        progressive = self.progressive[player]
+        if progressive == 'random':
+            return self.random.choice([True, False])
+        if progressive == 'off':
+            return False
+        return progressive == 'on' or (wanted_table[item_type] in progressive)
+
 
 class CollectionState(object):
 
