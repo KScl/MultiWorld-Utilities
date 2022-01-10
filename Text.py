@@ -300,6 +300,7 @@ junk_texts = [
     "{C:GREEN}\nMaybe you\ncould hire a\ndetective?  >",
     "{C:GREEN}\n>  READ\nor the owl\nwill eat you.",
     "{C:GREEN}\nOther randos\nexist too!\nTry some!  >",
+    "{C:GREEN}\n> The red\nboomerang is\nthe good one.",
 ]
 
 KingsReturn_texts = [

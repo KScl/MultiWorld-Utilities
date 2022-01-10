@@ -1168,17 +1168,21 @@ class Item(object):
     location: Optional[Location] = None
     world: Optional[World] = None
 
-    def __init__(self, name='', advancement=False, type=None, code=None, pedestal_hint=None, pedestal_credit=None, sickkid_credit=None, zora_credit=None, witch_credit=None, fluteboy_credit=None, hint_text=None, player=None):
+    def __init__(self, name='', advancement=False, type=None, code=None, hints=None, credits=None, player=None):
         self.name = name
         self.advancement = advancement
         self.type = type
-        self.pedestal_hint_text = pedestal_hint
-        self.pedestal_credit_text = pedestal_credit
-        self.sickkid_credit_text = sickkid_credit
-        self.zora_credit_text = zora_credit
-        self.magicshop_credit_text = witch_credit
-        self.fluteboy_credit_text = fluteboy_credit
-        self.hint_text = hint_text
+        self.hint_text = hints[0] if hints is not None else None
+        self.pedestal_hint_text = hints[1] if hints is not None else None
+        self.tablet_hint_text = hints[2] if hints is not None else None
+        self.local_ped_hint_text = hints[3] if hints is not None else None
+        self.local_tab_hint_text = hints[4] if hints is not None else None
+        self.pedestal_credit_text = credits[0] if credits is not None else None
+        self.sickkid_credit_text = credits[1] if credits is not None else None
+        self.zora_credit_text = credits[2] if credits is not None else None
+        self.magicshop_credit_text = credits[3] if credits is not None else None
+        self.fluteboy_credit_text = credits[4] if credits is not None else None
+        self.uncle_credit_text = credits[5] if credits is not None else None
         self.code = code
         self.player = player
 
