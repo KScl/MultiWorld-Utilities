@@ -36,7 +36,7 @@ from Text import KingsReturn_texts, Sanctuary_texts, Kakariko_texts, Blacksmiths
     LostWoods_texts, WishingWell_texts, DesertPalace_texts, MountainTower_texts, LinksHouse_texts, Lumberjacks_texts, \
     SickKid_texts, FluteBoy_texts, Zora_texts, MagicShop_texts, Sahasrahla_names
 from Utils import output_path, local_path, int16_as_bytes, int32_as_bytes, snes_to_pc, is_bundled
-from Items import ItemFactory
+from Items import ItemFactory, plural_pedestal_credit
 from EntranceShuffle import door_addresses, exit_ids
 import Patch
 
@@ -2249,33 +2249,55 @@ def write_strings(rom, world, player, team):
     if world.mode[player] == 'inverted':
         tt['sign_village_of_outcasts'] = 'attention\nferal ducks sighted\nhiding in statues\n\nflute players beware\n'
 
-    def hint_text(dest, special_hint=False):
-        if not dest:
-            return "nothing"
-        if special_hint is not False:
-            hint = dest.pedestal_hint_text if dest.pedestal_hint_text else "unknown item"
+    def hint_text(dest, special_hint=None):
+        if not dest: # Fill in with hints from Nothing
+            dest = ItemFactory('Nothing', player)
+
+        if special_hint == 'pedestal':
+            if dest.local_ped_hint_text is not None and dest.player == player:
+                hint = dest.local_ped_hint_text
+            else:
+                hint = dest.pedestal_hint_text
+
+            if dest.player != player:
+                hint += f" for {world.player_names[dest.player][team]}!"
+        elif special_hint == 'tablet':
+            if dest.local_tab_hint_text is not None and dest.player == player:
+                hint = dest.local_tab_hint_text
+            elif dest.tablet_hint_text is not None:
+                hint = dest.tablet_hint_text
+            else:
+                hint = dest.pedestal_hint_text
+
+            if dest.player != player:
+                hint += f" for {world.player_names[dest.player][team]}!"
         else:
             if isinstance(dest, Region) and dest.type == RegionType.Dungeon and dest.dungeon:
                 hint = dest.dungeon.name
             else:
                 hint = dest.hint_text if dest.hint_text else "something"
 
-        if dest.player != player:
-            if special_hint is not False:
-                hint += f" for {world.player_names[dest.player][team]}!"
-            elif type(dest) in [Region, Location]:
-                hint += f" in {world.player_names[dest.player][team]}'s world"
-            else:
-                hint += f" for {world.player_names[dest.player][team]}"
-        else:
-            # Special pedestal/tablet hints for certain local items
-            if dest.name == 'Master Sword' and special_hint == 'pedestal':
-                hint = 'I thought this\nwas meant to\nbe randomized?'
-            elif dest.name == 'Master Sword' and special_hint == 'tablet':
-                hint = 'Look at me!\nI am the\npedestal!'
-            elif dest.name == 'Book of Mudora' and special_hint is not False:
-                hint = 'This is a\nparadox?!'
+            if dest.player != player:
+                if type(dest) in [Region, Location]:
+                    hint += f" in {world.player_names[dest.player][team]}'s world"
+                else:
+                    hint += f" for {world.player_names[dest.player][team]}"
         return hint
+
+    def credit_text(item, credit_type):
+        credit_fallback = {
+            'pedestal': ['and the Hot Air'],
+            'sickkid': SickKid_texts,
+            'zora': Zora_texts,
+            'magicshop': MagicShop_texts,
+            'fluteboy': FluteBoy_texts,
+            'uncle': LinksHouse_texts
+        }
+
+        if not item: # Fill in with hints from Nothing
+            item = ItemFactory('Nothing', player)
+        credit = getattr(item, f'{credit_type}_credit_text')
+        return credit if credit is not None else local_random.choice(credit_fallback[credit_type])
 
     # For hints, first we write hints about entrances, some from the inconvenient list others from all reasonable entrances.
     if world.hints[player]:
@@ -2492,7 +2514,7 @@ def write_strings(rom, world, player, team):
     tt['sahasrahla_bring_courage'] = 'I lost my family heirloom in %s' % greenpendant.hint_text
 
     if world.crystals_needed_for_gt[player] == 1:
-        tt['sign_ganons_tower'] = 'You need a crystal to enter.'
+        tt['sign_ganons_tower'] = 'You need 1 crystal to enter.'
     else:
         tt['sign_ganons_tower'] = f'You need {world.crystals_needed_for_gt[player]} crystals to enter.'
 
@@ -2502,7 +2524,7 @@ def write_strings(rom, world, player, team):
         tt['sign_ganon'] = 'You need to pull the pedestal to defeat Ganon.'
     elif world.goal[player] == "ganon":
         if world.crystals_needed_for_ganon[player] == 1:
-            tt['sign_ganon'] = 'You need a crystal to beat Ganon and have beaten Agahnim atop Ganons Tower.'
+            tt['sign_ganon'] = 'You need 1 crystal to beat Ganon and have beaten Agahnim atop Ganons Tower.'
         else:
             tt['sign_ganon'] = f'You need {world.crystals_needed_for_ganon[player]} crystals to beat Ganon and ' \
                                f'have beaten Agahnim atop Ganons Tower'
@@ -2512,7 +2534,7 @@ def write_strings(rom, world, player, team):
         tt['ganon_phase_3_alt'] = 'Seriously? Go Away, I will not Die.'
     else:
         if world.crystals_needed_for_ganon[player] == 1:
-            tt['sign_ganon'] = 'You need a crystal to beat Ganon.'
+            tt['sign_ganon'] = 'You need 1 crystal to beat Ganon.'
         else:
             tt['sign_ganon'] = f'You need {world.crystals_needed_for_ganon[player]} crystals to beat Ganon.'
 
@@ -2567,19 +2589,10 @@ def write_strings(rom, world, player, team):
     tt['kakariko_tavern_fisherman'] = TavernMan_texts[local_random.randint(0, len(TavernMan_texts) - 1)]
 
     pedestalitem = world.get_location('Master Sword Pedestal', player).item
-    pedestal_text = 'Some Hot Air' if pedestalitem is None else hint_text(pedestalitem,
-                                                                          "pedestal") if pedestalitem.pedestal_hint_text is not None else 'Unknown Item'
-    tt['mastersword_pedestal_translated'] = pedestal_text
-    pedestal_credit_text = 'and the Hot Air' if pedestalitem is None else pedestalitem.pedestal_credit_text if pedestalitem.pedestal_credit_text is not None else 'and the Unknown Item'
+    tt['mastersword_pedestal_translated'] = hint_text(pedestalitem, "pedestal")
 
-    etheritem = world.get_location('Ether Tablet', player).item
-    ether_text = 'Some Hot Air' if etheritem is None else hint_text(etheritem,
-                                                                    "tablet") if etheritem.pedestal_hint_text is not None else 'Unknown Item'
-    tt['tablet_ether_book'] = ether_text
-    bombositem = world.get_location('Bombos Tablet', player).item
-    bombos_text = 'Some Hot Air' if bombositem is None else hint_text(bombositem,
-                                                                      "tablet") if bombositem.pedestal_hint_text is not None else 'Unknown Item'
-    tt['tablet_bombos_book'] = bombos_text
+    tt['tablet_ether_book'] = hint_text(world.get_location('Ether Tablet', player).item, "tablet")
+    tt['tablet_bombos_book'] = hint_text(world.get_location('Bombos Tablet', player).item, "tablet")
 
     # inverted spawn menu changes
     if world.mode[player] == 'inverted':
@@ -2597,21 +2610,12 @@ def write_strings(rom, world, player, team):
 
     credits = Credits()
 
-    sickkiditem = world.get_location('Sick Kid', player).item
-    sickkiditem_text = local_random.choice(
-        SickKid_texts) if sickkiditem is None or sickkiditem.sickkid_credit_text is None else sickkiditem.sickkid_credit_text
-
-    zoraitem = world.get_location('King Zora', player).item
-    zoraitem_text = local_random.choice(
-        Zora_texts) if zoraitem is None or zoraitem.zora_credit_text is None else zoraitem.zora_credit_text
-
-    magicshopitem = world.get_location('Potion Shop', player).item
-    magicshopitem_text = local_random.choice(
-        MagicShop_texts) if magicshopitem is None or magicshopitem.magicshop_credit_text is None else magicshopitem.magicshop_credit_text
-
-    fluteboyitem = world.get_location('Flute Spot', player).item
-    fluteboyitem_text = local_random.choice(
-        FluteBoy_texts) if fluteboyitem is None or fluteboyitem.fluteboy_credit_text is None else fluteboyitem.fluteboy_credit_text
+    pedestalitem_text = credit_text(pedestalitem, 'pedestal')
+    sickkiditem_text = credit_text(world.get_location('Sick Kid', player).item, 'sickkid')
+    zoraitem_text = credit_text(world.get_location('King Zora', player).item, 'zora')
+    magicshopitem_text = credit_text(world.get_location('Potion Shop', player).item, 'magicshop')
+    fluteboyitem_text = credit_text(world.get_location('Flute Spot', player).item, 'fluteboy')
+    uncleitem_text = credit_text(world.get_location("Link's Uncle", player).item, 'uncle')
 
     credits.update_credits_line('castle', 0, local_random.choice(KingsReturn_texts))
     credits.update_credits_line('sanctuary', 0, local_random.choice(Sanctuary_texts))
@@ -2620,7 +2624,7 @@ def write_strings(rom, world, player, team):
                                 local_random.choice(Kakariko_texts).format(local_random.choice(Sahasrahla_names)))
     credits.update_credits_line('desert', 0, local_random.choice(DesertPalace_texts))
     credits.update_credits_line('hera', 0, local_random.choice(MountainTower_texts))
-    credits.update_credits_line('house', 0, local_random.choice(LinksHouse_texts))
+    credits.update_credits_line('house', 0, uncleitem_text)
     credits.update_credits_line('zora', 0, zoraitem_text)
     credits.update_credits_line('witch', 0, magicshopitem_text)
     credits.update_credits_line('lumberjacks', 0, local_random.choice(Lumberjacks_texts))
@@ -2630,7 +2634,9 @@ def write_strings(rom, world, player, team):
     credits.update_credits_line('kakariko2', 0, sickkiditem_text)
     credits.update_credits_line('bridge', 0, local_random.choice(DeathMountain_texts))
     credits.update_credits_line('woods', 0, local_random.choice(LostWoods_texts))
-    credits.update_credits_line('pedestal', 0, pedestal_credit_text)
+    credits.update_credits_line('pedestal', 0, pedestalitem_text)
+    if pedestalitem and pedestalitem.name in plural_pedestal_credit:
+        credits.update_credits_line('pedestal', 1, 'sleep again...')        
 
     (pointers, data) = credits.get_bytes()
     rom.write_bytes(0x181500, data)
