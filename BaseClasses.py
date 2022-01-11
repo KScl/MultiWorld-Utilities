@@ -917,6 +917,11 @@ class CollectionState(object):
             if not self.has('Blue Shield', item.player):
                 self.prog_items['Blue Shield', item.player] += 1
                 changed = True
+        elif item.name in ['Sanctuary Heart Container', 'Boss Heart Container', 'Piece of Heart']:
+            # Don't actually collect unless marked for advancement
+            if item.advancement:
+                self.prog_items[item.name, item.player] += 1
+                changed = True
         elif event or item.advancement:
             self.prog_items[item.name, item.player] += 1
             changed = True
