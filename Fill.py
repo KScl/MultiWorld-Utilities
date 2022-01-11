@@ -471,18 +471,21 @@ def distribute_planned(world):
                 placement.failed(f"Cannot place item into already filled location {location}.")
                 continue
 
-            if location.can_fill(world.state, item, False):
-                world.push_item(location, item, collect=False)
-                location.event = True  # flag location to be checked during fill
-                location.locked = True
-                location.plando = placement
-                logging.debug(f"Plando placed {item} at {location}")
-            else:
+            if not location.can_fill(world.state, item, False):
                 placement.failed(f"Can't place {item} at {location} due to fill condition not met.")
                 continue
 
-            if placement.from_pool:  # Should happen AFTER the item is placed, in case it was allowed to skip failed placement.
+            # If from pool, try to get an instance of the item from the item pool proper
+            # so that we keep advancement changes, etc. intact
+            if placement.from_pool:
                 try:
-                    world.itempool.remove(item)
+                    item_index = world.itempool.index(item)
+                    item = world.itempool.pop(item_index)
                 except ValueError:
                     placement.warn(f"Could not remove {item} from pool as it's already missing from it.")
+
+            world.push_item(location, item, collect=False)
+            location.event = True  # flag location to be checked during fill
+            location.locked = True
+            location.plando = placement
+            logging.debug(f"Plando placed {item} at {location}")
