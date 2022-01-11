@@ -28,10 +28,12 @@ def parse_arguments(argv, no_defaults=False):
 
     parser = argparse.ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
     parser.add_argument('--create_spoiler', help='Output a Spoiler File', action='store_true')
-    parser.add_argument('--logic', default=defval('noglitches'), const='noglitches', nargs='?', choices=['noglitches', 'minorglitches', 'owglitches', 'nologic'],
+    parser.add_argument('--logic', default=defval('noglitches'), const='noglitches', nargs='?', choices=['noglitches', 'silverless', 'minorglitches', 'owglitches', 'nologic'],
                         help='''\
                              Select Enforcement of Item Requirements. (default: %(default)s)
                              No Glitches:
+                             Silverless Only: May require Silverless Ganon, but
+                                              no other minor glitches.
                              Minor Glitches: May require Fake Flippers, Bunny Revival
                                              and Dark Room Navigation.
                              Overworld Glitches: May require overworld glitches.
@@ -363,7 +365,7 @@ def parse_arguments(argv, no_defaults=False):
     parser.add_argument('--shuffle_prizes', default=defval('g'), choices=['', 'g', 'b', 'gb'])
     parser.add_argument('--sprite_pool', help='''\
     Specifies a colon separated list of sprites used for random/randomonevent. If not specified, the full sprite pool is used.''')
-    parser.add_argument('--dark_room_logic', default=('Lamp'), choices=["lamp", "torches", "none"], help='''\
+    parser.add_argument('--dark_room_logic', default=('Lamp'), choices=["lamp", "torches", "easy_dark", "none"], help='''\
     For unlit dark rooms, require the Lamp to be considered in logic by default. 
     Torches means additionally easily accessible Torches that can be lit with Fire Rod are considered doable.
     None means full traversal through dark rooms without tools is considered doable.''')

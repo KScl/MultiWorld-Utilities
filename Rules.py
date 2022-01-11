@@ -40,17 +40,15 @@ def set_rules(world, player):
     else:
         raise NotImplementedError(f'World state {world.mode[player]} is not implemented yet')
 
-    if world.logic[player] == 'noglitches':
+    if world.logic[player] in ['noglitches', 'silverless']:
         no_glitches_rules(world, player)
     elif world.logic[player] in ['owglitches', 'nologic']:
-        # Initially setting no_glitches_rules to set the baseline rules for some
+        # Initially setting minor_glitches_rules to set the baseline rules for some
         # entrances. The overworld_glitches_rules set is primarily additive.
-        no_glitches_rules(world, player)
-        fake_flipper_rules(world, player)
+        minor_glitches_rules(world, player)
         overworld_glitches_rules(world, player)
     elif world.logic[player] == 'minorglitches':
-        no_glitches_rules(world, player)
-        fake_flipper_rules(world, player)
+        minor_glitches_rules(world, player)
     else:
         raise NotImplementedError(f'Not implemented yet: Logic - {world.logic[player]}')
 
@@ -124,16 +122,15 @@ def add_rule(spot, rule, combine='and'):
         spot.access_rule = lambda state: rule(state) and old_rule(state)
 
 
-def add_lamp_requirement(world: World, spot, player: int, has_accessible_torch: bool = False):
-    if world.dark_room_logic[player] == "lamp":
+def add_lamp_requirement(world: World, spot, player: int, has_accessible_torch: bool = False, easy_dark_room: bool = False):
+    if world.dark_room_logic[player] == "none":
+        pass # Assumed always possible
+    elif world.dark_room_logic[player] in ["easy_dark"] and easy_dark_room:
+        pass # Assumed always possible
+    elif world.dark_room_logic[player] in ["easy_dark", "torches"] and has_accessible_torch:
+        add_rule(spot, lambda state: state.has('Lamp', player) or state.has('Fire Rod', player))
+    elif world.dark_room_logic[player] in ["easy_dark", "torches", "lamp"]:
         add_rule(spot, lambda state: state.has('Lamp', player))
-    elif world.dark_room_logic[player] == "torches":  # implicitly lamp as well
-        if has_accessible_torch:
-            add_rule(spot, lambda state: state.has('Lamp', player) or state.has('Fire Rod', player))
-        else:
-            add_rule(spot, lambda state: state.has('Lamp', player))
-    elif world.dark_room_logic[player] == "none":
-        pass
     else:
         raise ValueError(f"Unknown Dark Room Logic: {world.dark_room_logic[player]}")
 
@@ -472,7 +469,7 @@ def default_rules(world, player):
     set_rule(world.get_entrance('Broken Bridge (East)', player), lambda state: state.has('Hookshot', player))
     set_rule(world.get_entrance('East Death Mountain Teleporter', player), lambda state: state.can_lift_heavy_rocks(player))
     set_rule(world.get_entrance('Fairy Ascension Rocks', player), lambda state: state.can_lift_heavy_rocks(player))
-    set_rule(world.get_entrance('Paradox Cave Push Block Reverse', player), lambda state: state.has('Mirror', player))  # can erase block
+    # Paradox Cave Push Block Reverse: see no glitches/minor glitches rules
     set_rule(world.get_entrance('Death Mountain (Top)', player), lambda state: state.has('Hammer', player))
     set_rule(world.get_entrance('Turtle Rock Teleporter', player), lambda state: state.can_lift_heavy_rocks(player) and state.has('Hammer', player))
     set_rule(world.get_entrance('East Death Mountain (Top)', player), lambda state: state.has('Hammer', player))
@@ -610,7 +607,7 @@ def inverted_rules(world, player):
     set_rule(world.get_entrance('Broken Bridge (East)', player), lambda state: state.has('Hookshot', player) and state.has_Pearl(player))
     set_rule(world.get_entrance('Dark Death Mountain Teleporter (East Bottom)', player), lambda state: state.can_lift_heavy_rocks(player))
     set_rule(world.get_entrance('Fairy Ascension Rocks', player), lambda state: state.can_lift_heavy_rocks(player) and state.has_Pearl(player))
-    set_rule(world.get_entrance('Paradox Cave Push Block Reverse', player), lambda state: state.has('Mirror', player))  # can erase block
+    # Paradox Cave Push Block Reverse: see no glitches/minor glitches rules
     set_rule(world.get_entrance('Death Mountain (Top)', player), lambda state: state.has('Hammer', player) and state.has_Pearl(player))
     set_rule(world.get_entrance('Dark Death Mountain Teleporter (East)', player), lambda state: state.can_lift_heavy_rocks(player) and state.has('Hammer', player) and state.has_Pearl(player))  # bunny cannot use hammer
     set_rule(world.get_entrance('East Death Mountain (Top)', player), lambda state: state.has('Hammer', player) and state.has_Pearl(player))  # bunny can not use hammer
@@ -720,7 +717,7 @@ def no_glitches_rules(world, player):
     forbid_bomb_jump_requirements(world, player)
     add_conditional_lamps(world, player)
 
-def fake_flipper_rules(world, player):
+def minor_glitches_rules(world, player):
     if world.mode[player] == 'inverted':
         set_rule(world.get_entrance('Zoras River', player), lambda state: state.has_Pearl(player))
         set_rule(world.get_entrance('Lake Hylia Central Island Pier', player), lambda state: state.has_Pearl(player))
@@ -732,8 +729,7 @@ def fake_flipper_rules(world, player):
         set_rule(world.get_entrance('Dark Lake Hylia Teleporter', player), lambda state: True)
         set_rule(world.get_entrance('Dark Lake Hylia Ledge Drop', player), lambda state: True)
         set_rule(world.get_entrance('East Dark World Pier', player), lambda state: True)
-        #qirn jump
-        set_rule(world.get_entrance('East Dark World River Pier', player), lambda state: True)
+        set_rule(world.get_entrance('East Dark World River Pier', player), lambda state: True) # qirn jump
     else:
         set_rule(world.get_entrance('Zoras River', player), lambda state: True)
         set_rule(world.get_entrance('Lake Hylia Central Island Pier', player), lambda state: True)
@@ -741,9 +737,13 @@ def fake_flipper_rules(world, player):
         set_rule(world.get_entrance('Dark Lake Hylia Drop (East)', player), lambda state: state.has_Pearl(player) and state.has('Flippers', player))
         set_rule(world.get_entrance('Dark Lake Hylia Teleporter', player), lambda state: state.has_Pearl(player))
         set_rule(world.get_entrance('Dark Lake Hylia Ledge Drop', player), lambda state: state.has_Pearl(player))
-        #qirn jump
-        set_rule(world.get_entrance('East Dark World River Pier', player), lambda state: state.has_Pearl(player))
+        set_rule(world.get_entrance('East Dark World River Pier', player), lambda state: state.has_Pearl(player)) # qirn jump
 
+    add_rule(world.get_entrance('Ganons Tower (Double Switch Room)', player),
+        lambda state: state.has('Hookshot', player) or state.has('Pegasus Boots', player)) # can bonk all the way down -- obscure logic
+    set_rule(world.get_entrance('Paradox Cave Push Block Reverse', player), lambda state: state.has('Mirror', player)) # block deletion in logic
+    forbid_bomb_jump_requirements(world, player)
+    add_conditional_lamps(world, player)
 
 def forbid_bomb_jump_requirements(world, player):
     DMs_room_chests = ['Ganons Tower - DMs Room - Top Left', 'Ganons Tower - DMs Room - Top Right', 'Ganons Tower - DMs Room - Bottom Left', 'Ganons Tower - DMs Room - Bottom Right']
@@ -781,14 +781,14 @@ def add_conditional_lamps(world, player):
     # Light cones in standard depend on which world we actually are in, not which one the location would normally be
     # We add Lamp requirements only to those locations which lie in the dark world (or everything if open
 
-    def add_conditional_lamp(spot, region, spottype='Location', accessible_torch=False):
+    def add_conditional_lamp(spot, region, spottype='Location', accessible_torch=False, easy_room=False):
         if (not world.dark_world_light_cone and check_is_dark_world(world.get_region(region, player))) or (
                 not world.light_world_light_cone and not check_is_dark_world(world.get_region(region, player))):
             if spottype == 'Location':
                 spot = world.get_location(spot, player)
             else:
                 spot = world.get_entrance(spot, player)
-            add_lamp_requirement(world, spot, player, accessible_torch)
+            add_lamp_requirement(world, spot, player, accessible_torch, easy_room)
 
     add_conditional_lamp('Misery Mire (Vitreous)', 'Misery Mire (Entrance)', 'Entrance')
     add_conditional_lamp('Turtle Rock (Dark Room) (North)', 'Turtle Rock (Entrance)', 'Entrance')
@@ -796,29 +796,29 @@ def add_conditional_lamps(world, player):
     add_conditional_lamp('Palace of Darkness Big Key Door', 'Palace of Darkness (Entrance)', 'Entrance')
     add_conditional_lamp('Palace of Darkness Maze Door', 'Palace of Darkness (Entrance)', 'Entrance')
     add_conditional_lamp('Palace of Darkness - Dark Basement - Left', 'Palace of Darkness (Entrance)',
-                         'Location', True)
+                         'Location', accessible_torch=True, easy_room=True)
     add_conditional_lamp('Palace of Darkness - Dark Basement - Right', 'Palace of Darkness (Entrance)',
-                         'Location', True)
+                         'Location', accessible_torch=True, easy_room=True)
     if world.mode[player] != 'inverted':
         add_conditional_lamp('Agahnim 1', 'Agahnims Tower', 'Entrance')
         add_conditional_lamp('Castle Tower - Dark Maze', 'Agahnims Tower')
     else:
         add_conditional_lamp('Agahnim 1', 'Inverted Agahnims Tower', 'Entrance')
         add_conditional_lamp('Castle Tower - Dark Maze', 'Inverted Agahnims Tower')
-    add_conditional_lamp('Old Man', 'Old Man Cave')
-    add_conditional_lamp('Old Man Cave Exit (East)', 'Old Man Cave', 'Entrance')
+    add_conditional_lamp('Old Man', 'Old Man Cave', easy_room=True) # commonly done out of logic
+    add_conditional_lamp('Old Man Cave Exit (East)', 'Old Man Cave', 'Entrance', easy_room=True) # backwards as well
     add_conditional_lamp('Death Mountain Return Cave Exit (East)', 'Death Mountain Return Cave', 'Entrance')
     add_conditional_lamp('Death Mountain Return Cave Exit (West)', 'Death Mountain Return Cave', 'Entrance')
-    add_conditional_lamp('Old Man House Front to Back', 'Old Man House', 'Entrance')
-    add_conditional_lamp('Old Man House Back to Front', 'Old Man House', 'Entrance')
-    add_conditional_lamp('Eastern Palace - Big Key Chest', 'Eastern Palace')
-    add_conditional_lamp('Eastern Palace - Boss', 'Eastern Palace', 'Location', True)
-    add_conditional_lamp('Eastern Palace - Prize', 'Eastern Palace', 'Location', True)
+    add_conditional_lamp('Old Man House Front to Back', 'Old Man House', 'Entrance', easy_room=True) # hold down-right
+    add_conditional_lamp('Old Man House Back to Front', 'Old Man House', 'Entrance', easy_room=True) # hold up-left
+    add_conditional_lamp('Eastern Palace - Big Key Chest', 'Eastern Palace', easy_room=True)
+    add_conditional_lamp('Eastern Palace - Boss', 'Eastern Palace', 'Location', accessible_torch=True)
+    add_conditional_lamp('Eastern Palace - Prize', 'Eastern Palace', 'Location', accessible_torch=True)
 
     if not world.sewer_light_cone[player]:
-        add_lamp_requirement(world, world.get_location('Sewers - Dark Cross', player), player)
-        add_lamp_requirement(world, world.get_entrance('Sewers Back Door', player), player)
-        add_lamp_requirement(world, world.get_entrance('Throne Room', player), player)
+        add_lamp_requirement(world, world.get_location('Sewers - Dark Cross', player), player, easy_dark_room=True)
+        add_lamp_requirement(world, world.get_entrance('Sewers Back Door', player), player, easy_dark_room=True)
+        add_lamp_requirement(world, world.get_entrance('Throne Room', player), player, easy_dark_room=True)
 
 
 def open_rules(world, player):

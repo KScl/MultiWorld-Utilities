@@ -494,20 +494,25 @@ def roll_settings(weights: dict, plando_options: typing.Set[str] = frozenset(("b
     ret = argparse.Namespace()
     ret.name = get_choice('name', weights)
 
-    glitches_required = get_choice('glitches_required', weights)
-    if glitches_required not in [None, 'none', 'no_logic', 'overworld_glitches', 'minor_glitches']:
-        logging.warning("Only NMG, OWG and No Logic supported")
-        glitches_required = 'none'
-    ret.logic = {None: 'noglitches', 'none': 'noglitches', 'no_logic': 'nologic', 'overworld_glitches': 'owglitches',
-                 'minor_glitches': 'minorglitches'}[
-        glitches_required]
+    glitches_map = {
+        'none': 'noglitches',
+        'no_glitches': 'noglitches', # alias
+        'silverless_only': 'silverless',
+        'minor_glitches': 'minorglitches', # partially implemented in doors branch
+        'overworld_glitches': 'owglitches', # not supported in doors branch
+        'no_logic': 'nologic',
+    }
+    glitches_required = get_choice('glitches_required', weights, 'none')
+    if glitches_required not in glitches_map:
+        raise ValueError(f"Unknown Glitches Logic: {glitches_required}")
+    ret.logic = glitches_map[glitches_required]
 
     ret.dark_room_logic = get_choice("dark_room_logic", weights, "lamp")
     if not ret.dark_room_logic:  # None/False
         ret.dark_room_logic = "none"
     if ret.dark_room_logic == "sconces":
         ret.dark_room_logic = "torches"
-    if ret.dark_room_logic not in {"lamp", "torches", "none"}:
+    if ret.dark_room_logic not in {"lamp", "torches", "easy_dark", "none"}:
         raise ValueError(f"Unknown Dark Room Logic: \"{ret.dark_room_logic}\"")
 
     ret.restrict_dungeon_item_on_boss = get_choice('restrict_dungeon_item_on_boss', weights, False)
