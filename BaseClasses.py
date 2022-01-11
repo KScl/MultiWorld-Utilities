@@ -834,6 +834,12 @@ class CollectionState(object):
             basemagic = 32
         elif self.has('Magic Upgrade (1/2)', player):
             basemagic = 16
+
+        # fullrefill is only true in Spike Cave.
+        # Bottles can not be used in Spike Cave in OHKO mode, as switching to use the bottle results in immediate death.
+        if fullrefill and not self.world.can_take_damage[player]:
+           return basemagic >= smallmagic
+
         if self.can_buy_unlimited('Green Potion', player) or self.can_buy_unlimited('Blue Potion', player):
             if self.world.item_functionality[player] == 'hard' and not fullrefill:
                 basemagic = basemagic + int(basemagic * 0.5 * self.bottle_count(player))
