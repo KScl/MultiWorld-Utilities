@@ -452,19 +452,19 @@ item_table = {
     'Sanctuary Heart Container':      (False, None, 0x3F),
     'Piece of Heart':                 (False, None, 0x17),
     # Junk Items
-    'Single Arrow':                   (False, None, 0x43),
-    'Arrows (10)':                    (False, None, 0x44),
-    'Single Bomb':                    (False, None, 0x27),
-    'Bombs (3)':                      (False, None, 0x28),
-    'Bombs (10)':                     (False, None, 0x31),
-    'Rupee (1)':                      (False, None, 0x34),
-    'Rupees (5)':                     (False, None, 0x35),
-    'Rupees (20)':                    (False, None, 0x36),
-    'Rupees (50)':                    (False, None, 0x41),
-    'Rupees (100)':                   (False, None, 0x40),
-    'Rupees (300)':                   (False, None, 0x46),
-    'Rupoor':                         (False, None, 0x59),
-    'Small Heart':                    (False, None, 0x42), # Works in chests just fine
+    'Single Arrow':                   (False, 'Junk', 0x43),
+    'Arrows (10)':                    (False, 'Junk', 0x44),
+    'Single Bomb':                    (False, 'Junk', 0x27),
+    'Bombs (3)':                      (False, 'Junk', 0x28),
+    'Bombs (10)':                     (False, 'Junk', 0x31),
+    'Rupee (1)':                      (False, 'Junk', 0x34),
+    'Rupees (5)':                     (False, 'Junk', 0x35),
+    'Rupees (20)':                    (False, 'Junk', 0x36),
+    'Rupees (50)':                    (False, 'Junk', 0x41),
+    'Rupees (100)':                   (False, 'Junk', 0x40),
+    'Rupees (300)':                   (False, 'Junk', 0x46),
+    'Rupoor':                         (False, 'Junk', 0x59),
+    'Small Heart':                    (False, 'Junk', 0x42), # Works in chests just fine
     # Bottles
     'Bottle':                         (True, None, 0x16),
     'Bottle (Red Potion)':            (True, None, 0x2B),
@@ -487,7 +487,7 @@ item_table = {
     'Bee Trap':                       (False, None, 0xB0), # Spawns a burst of bees over the player
     'Single RNG':                     (False, None, 0x62), # Never once tested this in my life
     'Multi RNG':                      (False, None, 0x63), # Never once tested this in my life
-    'Magic Jar':                      (False, None, 0xB3), # Unsure if this works properly. Drops a large magic jar in front of the player, seems flaky.
+    'Magic Jar':                      (False, None, 0xB3), # Meant to be bought in shops, doesn't work properly sometimes if obtained from chest.
     #'Hint':                           (False, None, 0xB5), # Commented out in vanilla Archipelago, probably nonfunctional
     #'Bomb Trap':                      (False, None, 0xB6), # Commented out in vanilla Archipelago, probably nonfunctional
     # Free Small Keys

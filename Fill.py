@@ -199,6 +199,20 @@ def distribute_items_restrictive(world, gftower_trash=False, fill_locations=None
 
     world.random.shuffle(fill_locations)
 
+    # Occasionally the item pool will be larger than needed to actually fill every space
+    # Item Plando is usually (read: basically always) the cause of this
+    # We prefer tossing out a junk item than letting something like a Heart Container not get placed
+    if len(restitempool) > len(fill_locations):
+        all_junk_items = [item for item in restitempool if item.type == 'Junk']
+        # There's a very low but non-zero possibility of there not being enough junk in the pool
+        # If that's the case we just remove all junk items, and fast_fill will randomly drop some non-junk
+        num_remove = min(len(restitempool)-len(fill_locations), len(all_junk_items))
+        junk_items = world.random.sample(all_junk_items, num_remove)
+
+        logging.warning('Junk items being tossed from the item pool: %s', [str(item) for item in junk_items])
+        for item in junk_items:
+            restitempool.remove(item)
+
     restitempool, fill_locations = fast_fill(world, restitempool, fill_locations)
     unplaced = [str(item) for item in progitempool + restitempool]
     unfilled = [location.name for location in fill_locations]
