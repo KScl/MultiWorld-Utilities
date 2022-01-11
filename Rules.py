@@ -35,13 +35,14 @@ def set_rules(world, player):
     else:
         raise NotImplementedError('Not implemented yet')
 
-    if world.logic[player] == 'noglitches':
+    if world.logic[player] in ['noglitches', 'silverless']:
         no_glitches_rules(world, player)
     elif world.logic[player] == 'minorglitches':
-        no_glitches_rules(world, player)
-        fake_flipper_rules(world, player)
+        minor_glitches_rules(world, player)
     else:
         raise NotImplementedError(f'Not implemented yet: Logic - {world.logic[player]}')
+
+    lamp_rules(world, player)
 
     ganon = world.get_location('Ganon', player)
     set_rule(ganon, lambda state: GanonDefeatRule(state, player))
@@ -93,16 +94,15 @@ def add_rule(spot, rule, combine='and'):
 def or_rule(rule1, rule2):
     return lambda state: rule1(state) or rule2(state)
 
-def add_lamp_requirement(world: World, spot, player: int, has_accessible_torch: bool = False):
-    if world.dark_room_logic[player] == "lamp":
+def add_lamp_requirement(world: World, spot, player: int, has_accessible_torch: bool = False, easy_dark_room: bool = False):
+    if world.dark_room_logic[player] == "none":
+        pass # Assumed always possible
+    elif world.dark_room_logic[player] in ["easy_dark"] and easy_dark_room:
+        pass # Assumed always possible
+    elif world.dark_room_logic[player] in ["easy_dark", "torches"] and has_accessible_torch:
+        add_rule(spot, lambda state: state.has('Lamp', player) or state.has('Fire Rod', player))
+    elif world.dark_room_logic[player] in ["easy_dark", "torches", "lamp"]:
         add_rule(spot, lambda state: state.has('Lamp', player))
-    elif world.dark_room_logic[player] == "torches":  # implicitly lamp as well
-        if has_accessible_torch:
-            add_rule(spot, lambda state: state.has('Lamp', player) or state.has('Fire Rod', player))
-        else:
-            add_rule(spot, lambda state: state.has('Lamp', player))
-    elif world.dark_room_logic[player] == "none":
-        pass
     else:
         raise ValueError(f"Unknown Dark Room Logic: {world.dark_room_logic[player]}")
 
@@ -511,7 +511,7 @@ def default_rules(world, player):
     set_rule(world.get_entrance('Broken Bridge (East)', player), lambda state: state.has('Hookshot', player))
     set_rule(world.get_entrance('East Death Mountain Teleporter', player), lambda state: state.can_lift_heavy_rocks(player))
     set_rule(world.get_entrance('Fairy Ascension Rocks', player), lambda state: state.can_lift_heavy_rocks(player))
-    set_rule(world.get_entrance('Paradox Cave Push Block Reverse', player), lambda state: state.has('Mirror', player))  # can erase block
+    # Paradox Cave Push Block Reverse: see no glitches/minor glitches rules
     set_rule(world.get_entrance('Death Mountain (Top)', player), lambda state: state.has('Hammer', player))
     set_rule(world.get_entrance('Turtle Rock Teleporter', player), lambda state: state.can_lift_heavy_rocks(player) and state.has('Hammer', player))
     set_rule(world.get_entrance('East Death Mountain (Top)', player), lambda state: state.has('Hammer', player))
@@ -649,7 +649,7 @@ def inverted_rules(world, player):
     set_rule(world.get_entrance('Broken Bridge (East)', player), lambda state: state.has('Hookshot', player) and state.has_Pearl(player))
     set_rule(world.get_entrance('Dark Death Mountain Teleporter (East Bottom)', player), lambda state: state.can_lift_heavy_rocks(player))
     set_rule(world.get_entrance('Fairy Ascension Rocks', player), lambda state: state.can_lift_heavy_rocks(player) and state.has_Pearl(player))
-    set_rule(world.get_entrance('Paradox Cave Push Block Reverse', player), lambda state: state.has('Mirror', player))  # can erase block
+    # Paradox Cave Push Block Reverse: see no glitches/minor glitches rules
     set_rule(world.get_entrance('Death Mountain (Top)', player), lambda state: state.has('Hammer', player) and state.has_Pearl(player))
     set_rule(world.get_entrance('Dark Death Mountain Teleporter (East)', player), lambda state: state.can_lift_heavy_rocks(player) and state.has('Hammer', player) and state.has_Pearl(player))  # bunny cannot use hammer
     set_rule(world.get_entrance('East Death Mountain (Top)', player), lambda state: state.has('Hammer', player) and state.has_Pearl(player))  # bunny can not use hammer
@@ -736,6 +736,7 @@ def inverted_rules(world, player):
 
     set_rule(world.get_entrance('Inverted Ganons Tower', player), lambda state: state.has_crystals(world.crystals_needed_for_gt[player], player))
 
+
 def no_glitches_rules(world, player):
     if world.mode[player] != 'inverted':
         add_rule(world.get_entrance('Zoras River', player), lambda state: state.has('Flippers', player) or state.can_lift_rocks(player))
@@ -767,6 +768,35 @@ def no_glitches_rules(world, player):
     set_rule(world.get_entrance('Paradox Cave Push Block Reverse', player), lambda state: False)  # no glitches does not require block override
     set_rule(world.get_entrance('Paradox Cave Bomb Jump', player), lambda state: False)
 
+
+def minor_glitches_rules(world, player):
+    # Note: ancilla deletion is not considered in logic at this time
+    if world.mode[player] != 'inverted':
+        set_rule(world.get_entrance('Zoras River', player), lambda state: True)
+        set_rule(world.get_entrance('Lake Hylia Central Island Pier', player), lambda state: True)
+        set_rule(world.get_entrance('Hobo Bridge', player), lambda state: True)
+        set_rule(world.get_entrance('Dark Lake Hylia Drop (East)', player), lambda state: state.has_Pearl(player) and state.has('Flippers', player))
+        set_rule(world.get_entrance('Dark Lake Hylia Teleporter', player), lambda state: state.has_Pearl(player))
+        set_rule(world.get_entrance('Dark Lake Hylia Ledge Drop', player), lambda state: state.has_Pearl(player))
+        add_rule(world.get_entrance('East Dark World River Pier', player), lambda state: state.has('Flippers', player))
+    else:
+        set_rule(world.get_entrance('Zoras River', player), lambda state: state.has_Pearl(player))
+        set_rule(world.get_entrance('Lake Hylia Central Island Pier', player), lambda state: state.has_Pearl(player))
+        set_rule(world.get_entrance('Lake Hylia Island Pier', player), lambda state: state.has_Pearl(player))
+        set_rule(world.get_entrance('Lake Hylia Warp', player), lambda state: state.has_Pearl(player))
+        set_rule(world.get_entrance('Northeast Light World Warp', player), lambda state: state.has_Pearl(player))
+        set_rule(world.get_entrance('Hobo Bridge', player), lambda state: state.has_Pearl(player))
+        set_rule(world.get_entrance('Dark Lake Hylia Drop (East)', player), lambda state: state.has('Flippers', player))
+        set_rule(world.get_entrance('Dark Lake Hylia Teleporter', player), lambda state: True)
+        set_rule(world.get_entrance('Dark Lake Hylia Ledge Drop', player), lambda state: True)
+        set_rule(world.get_entrance('East Dark World Pier', player), lambda state: True)
+        add_rule(world.get_entrance('East Dark World River Pier', player), lambda state: state.has('Flippers', player))
+
+    set_rule(world.get_entrance('Paradox Cave Push Block Reverse', player), lambda state: state.has('Mirror', player)) # block deletion in logic
+    set_rule(world.get_entrance('Paradox Cave Bomb Jump', player), lambda state: False)
+
+
+def lamp_rules(world, player):
     # Light cones in standard depend on which world we actually are in, not which one the location would normally be
     # We add Lamp requirements only to those locations which lie in the dark world (or everything if open
     DW_Entrances = ['Bumper Cave (Bottom)', 'Superbunny Cave (Top)', 'Superbunny Cave (Bottom)', 'Hookshot Cave', 'Bumper Cave (Top)', 'Hookshot Cave Back Entrance', 'Dark Death Mountain Ledge (East)',
@@ -778,14 +808,14 @@ def no_glitches_rules(world, player):
                 return True
         return False
 
-    def add_conditional_lamp(spot, region, spottype='Location', accessible_torch=False):
+    def add_conditional_lamp(spot, region, spottype='Location', accessible_torch=False, easy_room=False):
         if (not world.dark_world_light_cone and check_is_dark_world(world.get_region(region, player))) or (
                 not world.light_world_light_cone and not check_is_dark_world(world.get_region(region, player))):
             if spottype == 'Location':
                 spot = world.get_location(spot, player)
             else:
                 spot = world.get_entrance(spot, player)
-            add_lamp_requirement(world, spot, player, accessible_torch)
+            add_lamp_requirement(world, spot, player, accessible_torch, easy_room)
 
     dark_rooms = {
         'TR Dark Ride': {'sewer': False, 'entrances': ['TR Dark Ride Up Stairs', 'TR Dark Ride SW'], 'locations': [], 'easy_torches': []},
@@ -827,6 +857,9 @@ def no_glitches_rules(world, player):
     dark_debug_set = set()
     for region, info in dark_rooms.items():
         is_dark = False
+        is_easy = False
+
+        # sewer light cones
         if not world.sewer_light_cone[player]:
             is_dark = True
         elif world.doorShuffle[player] != 'crossed' and not info['sewer']:
@@ -834,41 +867,28 @@ def no_glitches_rules(world, player):
         elif world.doorShuffle[player] == 'crossed':
             sewer_builder = world.dungeon_layouts[player]['Hyrule Castle']
             is_dark = region not in sewer_builder.master_sector.region_set()
+
+        if world.doorShuffle[player] == 'crossed':
+            pass # No dungeon dark room is easy when you don't even know what room you're in in the first place
+        elif region in \
+            ['PoD Dark Basement', 'Eastern Dark Square', 'Eastern Dark Pots',
+             'Sewers Dark Cross', 'Sewers Behind Tapestry', 'Sewers Rope Room', 'Sewers Water', 'Sewers Key Rat']:
+            is_easy = True
+
         if is_dark:
             dark_debug_set.add(region)
             for ent in info['entrances']:
-                add_conditional_lamp(ent, region, 'Entrance', ent in info['easy_torches'])
+                add_conditional_lamp(ent, region, 'Entrance', ent in info['easy_torches'], is_easy)
             for loc in info['locations']:
-                add_conditional_lamp(loc, region, 'Location', loc in info['easy_torches'])
+                add_conditional_lamp(loc, region, 'Location', loc in info['easy_torches'], is_easy)
     logging.getLogger('').debug('Non Dark Regions: ' + ', '.join(set(dark_rooms.keys()).difference(dark_debug_set)))
 
-    add_conditional_lamp('Old Man', 'Old Man Cave', 'Location')
-    add_conditional_lamp('Old Man Cave Exit (East)', 'Old Man Cave', 'Entrance')
+    add_conditional_lamp('Old Man', 'Old Man Cave', 'Location', easy_room=True) # Commonly done in both directions
+    add_conditional_lamp('Old Man Cave Exit (East)', 'Old Man Cave', 'Entrance', easy_room=True) # Commonly done in both directions
     add_conditional_lamp('Death Mountain Return Cave Exit (East)', 'Death Mountain Return Cave', 'Entrance')
     add_conditional_lamp('Death Mountain Return Cave Exit (West)', 'Death Mountain Return Cave', 'Entrance')
-    add_conditional_lamp('Old Man House Front to Back', 'Old Man House', 'Entrance')
-    add_conditional_lamp('Old Man House Back to Front', 'Old Man House', 'Entrance')
-
-
-def fake_flipper_rules(world, player):
-    if world.mode[player] != 'inverted':
-        set_rule(world.get_entrance('Zoras River', player), lambda state: True)
-        set_rule(world.get_entrance('Lake Hylia Central Island Pier', player), lambda state: True)
-        set_rule(world.get_entrance('Hobo Bridge', player), lambda state: True)
-        set_rule(world.get_entrance('Dark Lake Hylia Drop (East)', player), lambda state: state.has_Pearl(player) and state.has('Flippers', player))
-        set_rule(world.get_entrance('Dark Lake Hylia Teleporter', player), lambda state: state.has_Pearl(player))
-        set_rule(world.get_entrance('Dark Lake Hylia Ledge Drop', player), lambda state: state.has_Pearl(player))
-    else:
-        set_rule(world.get_entrance('Zoras River', player), lambda state: state.has_Pearl(player))
-        set_rule(world.get_entrance('Lake Hylia Central Island Pier', player), lambda state: state.has_Pearl(player))
-        set_rule(world.get_entrance('Lake Hylia Island Pier', player), lambda state: state.has_Pearl(player))
-        set_rule(world.get_entrance('Lake Hylia Warp', player), lambda state: state.has_Pearl(player))
-        set_rule(world.get_entrance('Northeast Light World Warp', player), lambda state: state.has_Pearl(player))
-        set_rule(world.get_entrance('Hobo Bridge', player), lambda state: state.has_Pearl(player))
-        set_rule(world.get_entrance('Dark Lake Hylia Drop (East)', player), lambda state: state.has('Flippers', player))
-        set_rule(world.get_entrance('Dark Lake Hylia Teleporter', player), lambda state: True)
-        set_rule(world.get_entrance('Dark Lake Hylia Ledge Drop', player), lambda state: True)
-        set_rule(world.get_entrance('East Dark World Pier', player), lambda state: True)
+    add_conditional_lamp('Old Man House Front to Back', 'Old Man House', 'Entrance', easy_room=True) # Hold down-right
+    add_conditional_lamp('Old Man House Back to Front', 'Old Man House', 'Entrance', easy_room=True) # Hold up-left
 
 
 def open_rules(world, player):

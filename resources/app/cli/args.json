@@ -16,6 +16,7 @@
   "logic": {
     "choices": [
       "noglitches",
+      "silverless",
       "minorglitches",
       "overworld_glitches",
       "nologic"
@@ -456,6 +457,7 @@
     "choices": [
       "lamp",
       "torches",
+      "easy_dark",
       "none"
     ]
   },
