@@ -365,10 +365,12 @@ def parse_arguments(argv, no_defaults=False):
     parser.add_argument('--shuffle_prizes', default=defval('g'), choices=['', 'g', 'b', 'gb'])
     parser.add_argument('--sprite_pool', help='''\
     Specifies a colon separated list of sprites used for random/randomonevent. If not specified, the full sprite pool is used.''')
-    parser.add_argument('--dark_room_logic', default=('Lamp'), choices=["lamp", "torches", "easy_dark", "none"], help='''\
+    parser.add_argument('--dark_room_logic', default=('Lamp'), choices=["lamp", "torches", "easy_dark_rooms", "medium_dark_rooms", "hard_dark_rooms", "none"], help='''\
     For unlit dark rooms, require the Lamp to be considered in logic by default. 
     Torches means additionally easily accessible Torches that can be lit with Fire Rod are considered doable.
-    None means full traversal through dark rooms without tools is considered doable.''')
+    Easy Dark Rooms assumes commonly traversed dark rooms (e.g. Old Man Cave, Eastern Big Key) are always doable, and torches logic otherwise.
+    Medium Dark Rooms adds in some less commonly traversed rooms (e.g. Eastern Boss, Turtle Rock) to the above.
+    None (or Hard Dark Rooms) means full traversal through dark rooms without tools is considered doable.''')
     parser.add_argument('--restrict_dungeon_item_on_boss', default=defval(False), action="store_true")
     parser.add_argument('--remote_items', default=defval(False), action='store_true')
     parser.add_argument('--multi', default=defval(1), type=lambda value: min(max(int(value), 1), 255))

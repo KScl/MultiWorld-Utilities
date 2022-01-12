@@ -122,14 +122,16 @@ def add_rule(spot, rule, combine='and'):
         spot.access_rule = lambda state: rule(state) and old_rule(state)
 
 
-def add_lamp_requirement(world: World, spot, player: int, has_accessible_torch: bool = False, easy_dark_room: bool = False):
-    if world.dark_room_logic[player] == "none":
+def add_lamp_requirement(world: World, spot, player: int, dark_difficulty: str = 'hard', has_accessible_torch: bool = False):
+    if world.dark_room_logic[player] in ["hard_dark_rooms", "none"]:
         pass # Assumed always possible
-    elif world.dark_room_logic[player] in ["easy_dark"] and easy_dark_room:
+    elif world.dark_room_logic[player] in ["medium_dark_rooms"] and dark_difficulty == 'medium':
         pass # Assumed always possible
-    elif world.dark_room_logic[player] in ["easy_dark", "torches"] and has_accessible_torch:
+    elif world.dark_room_logic[player] in ["medium_dark_rooms", "easy_dark_rooms"] and dark_difficulty == 'easy':
+        pass # Assumed always possible
+    elif world.dark_room_logic[player] in ["medium_dark_rooms", "easy_dark_rooms", "torches"] and has_accessible_torch:
         add_rule(spot, lambda state: state.has('Lamp', player) or state.has('Fire Rod', player))
-    elif world.dark_room_logic[player] in ["easy_dark", "torches", "lamp"]:
+    elif world.dark_room_logic[player] in ["medium_dark_rooms", "easy_dark_rooms", "torches", "lamp"]:
         add_rule(spot, lambda state: state.has('Lamp', player))
     else:
         raise ValueError(f"Unknown Dark Room Logic: {world.dark_room_logic[player]}")
@@ -781,44 +783,51 @@ def add_conditional_lamps(world, player):
     # Light cones in standard depend on which world we actually are in, not which one the location would normally be
     # We add Lamp requirements only to those locations which lie in the dark world (or everything if open
 
-    def add_conditional_lamp(spot, region, spottype='Location', accessible_torch=False, easy_room=False):
+    def add_conditional_lamp(spot, region, spottype='Location', dark_difficulty='hard', accessible_torch=False):
         if (not world.dark_world_light_cone and check_is_dark_world(world.get_region(region, player))) or (
                 not world.light_world_light_cone and not check_is_dark_world(world.get_region(region, player))):
             if spottype == 'Location':
                 spot = world.get_location(spot, player)
             else:
                 spot = world.get_entrance(spot, player)
-            add_lamp_requirement(world, spot, player, accessible_torch, easy_room)
+            add_lamp_requirement(world, spot, player, dark_difficulty, accessible_torch)
 
-    add_conditional_lamp('Misery Mire (Vitreous)', 'Misery Mire (Entrance)', 'Entrance')
-    add_conditional_lamp('Turtle Rock (Dark Room) (North)', 'Turtle Rock (Entrance)', 'Entrance')
-    add_conditional_lamp('Turtle Rock (Dark Room) (South)', 'Turtle Rock (Entrance)', 'Entrance')
-    add_conditional_lamp('Palace of Darkness Big Key Door', 'Palace of Darkness (Entrance)', 'Entrance')
-    add_conditional_lamp('Palace of Darkness Maze Door', 'Palace of Darkness (Entrance)', 'Entrance')
-    add_conditional_lamp('Palace of Darkness - Dark Basement - Left', 'Palace of Darkness (Entrance)',
-                         'Location', accessible_torch=True, easy_room=True)
-    add_conditional_lamp('Palace of Darkness - Dark Basement - Right', 'Palace of Darkness (Entrance)',
-                         'Location', accessible_torch=True, easy_room=True)
+    # Dungeons
+    add_conditional_lamp('Misery Mire (Vitreous)', 'Misery Mire (Entrance)', 'Entrance', dark_difficulty='hard')
+    add_conditional_lamp('Turtle Rock (Dark Room) (North)', 'Turtle Rock (Entrance)', 'Entrance', dark_difficulty='medium') # use firebars as guidance
+    add_conditional_lamp('Turtle Rock (Dark Room) (South)', 'Turtle Rock (Entrance)', 'Entrance', dark_difficulty='medium') # use firebars as guidance
+    add_conditional_lamp('Palace of Darkness Big Key Door', 'Palace of Darkness (Entrance)', 'Entrance', dark_difficulty='hard')
+    add_conditional_lamp('Palace of Darkness Maze Door', 'Palace of Darkness (Entrance)', 'Entrance', dark_difficulty='hard')
+    add_conditional_lamp('Palace of Darkness - Dark Basement - Left', 'Palace of Darkness (Entrance)', 'Location', dark_difficulty='easy', accessible_torch=True)
+    add_conditional_lamp('Palace of Darkness - Dark Basement - Right', 'Palace of Darkness (Entrance)', 'Location', dark_difficulty='easy', accessible_torch=True)
     if world.mode[player] != 'inverted':
-        add_conditional_lamp('Agahnim 1', 'Agahnims Tower', 'Entrance')
-        add_conditional_lamp('Castle Tower - Dark Maze', 'Agahnims Tower')
+        add_conditional_lamp('Agahnim 1', 'Agahnims Tower', 'Entrance', dark_difficulty='hard')
+        add_conditional_lamp('Castle Tower - Dark Maze', 'Agahnims Tower', dark_difficulty='hard')
     else:
-        add_conditional_lamp('Agahnim 1', 'Inverted Agahnims Tower', 'Entrance')
-        add_conditional_lamp('Castle Tower - Dark Maze', 'Inverted Agahnims Tower')
-    add_conditional_lamp('Old Man', 'Old Man Cave', easy_room=True) # commonly done out of logic
-    add_conditional_lamp('Old Man Cave Exit (East)', 'Old Man Cave', 'Entrance', easy_room=True) # backwards as well
-    add_conditional_lamp('Death Mountain Return Cave Exit (East)', 'Death Mountain Return Cave', 'Entrance')
-    add_conditional_lamp('Death Mountain Return Cave Exit (West)', 'Death Mountain Return Cave', 'Entrance')
-    add_conditional_lamp('Old Man House Front to Back', 'Old Man House', 'Entrance', easy_room=True) # hold down-right
-    add_conditional_lamp('Old Man House Back to Front', 'Old Man House', 'Entrance', easy_room=True) # hold up-left
-    add_conditional_lamp('Eastern Palace - Big Key Chest', 'Eastern Palace', easy_room=True)
-    add_conditional_lamp('Eastern Palace - Boss', 'Eastern Palace', 'Location', accessible_torch=True)
-    add_conditional_lamp('Eastern Palace - Prize', 'Eastern Palace', 'Location', accessible_torch=True)
+        add_conditional_lamp('Agahnim 1', 'Inverted Agahnims Tower', 'Entrance', dark_difficulty='hard')
+        add_conditional_lamp('Castle Tower - Dark Maze', 'Inverted Agahnims Tower', dark_difficulty='hard')
+    add_conditional_lamp('Eastern Palace - Big Key Chest', 'Eastern Palace', dark_difficulty='easy')
+    add_conditional_lamp('Eastern Palace - Boss', 'Eastern Palace', 'Location', dark_difficulty='medium', accessible_torch=True)
+    add_conditional_lamp('Eastern Palace - Prize', 'Eastern Palace', 'Location', dark_difficulty='medium', accessible_torch=True)
 
     if not world.sewer_light_cone[player]:
-        add_lamp_requirement(world, world.get_location('Sewers - Dark Cross', player), player, easy_dark_room=True)
-        add_lamp_requirement(world, world.get_entrance('Sewers Back Door', player), player, easy_dark_room=True)
-        add_lamp_requirement(world, world.get_entrance('Throne Room', player), player, easy_dark_room=True)
+        add_lamp_requirement(world, world.get_location('Sewers - Dark Cross', player), player, dark_difficulty='easy')
+        add_lamp_requirement(world, world.get_entrance('Sewers Back Door', player), player, dark_difficulty='easy')
+        add_lamp_requirement(world, world.get_entrance('Throne Room', player), player, dark_difficulty='easy')
+
+    # Caves
+    if world.shuffle[player] == 'vanilla': # Easy cave logic only for unshuffled
+        add_conditional_lamp('Old Man', 'Old Man Cave', dark_difficulty='easy') # commonly done out of logic
+        add_conditional_lamp('Old Man Cave Exit (East)', 'Old Man Cave', 'Entrance', dark_difficulty='easy') # backwards as well
+        add_conditional_lamp('Old Man House Front to Back', 'Old Man House', 'Entrance', dark_difficulty='easy') # hold down-right
+        add_conditional_lamp('Old Man House Back to Front', 'Old Man House', 'Entrance', dark_difficulty='easy') # hold up-left
+    else:
+        add_conditional_lamp('Old Man', 'Old Man Cave', dark_difficulty='medium') # commonly done out of logic
+        add_conditional_lamp('Old Man Cave Exit (East)', 'Old Man Cave', 'Entrance', dark_difficulty='medium') # backwards as well
+        add_conditional_lamp('Old Man House Front to Back', 'Old Man House', 'Entrance', dark_difficulty='medium') # hold down-right
+        add_conditional_lamp('Old Man House Back to Front', 'Old Man House', 'Entrance', dark_difficulty='medium') # hold up-left
+    add_conditional_lamp('Death Mountain Return Cave Exit (East)', 'Death Mountain Return Cave', 'Entrance', dark_difficulty='hard')
+    add_conditional_lamp('Death Mountain Return Cave Exit (West)', 'Death Mountain Return Cave', 'Entrance', dark_difficulty='hard')
 
 
 def open_rules(world, player):
