@@ -27,16 +27,20 @@ name: YourName{number} # Your name in-game. Spaces will be replaced with undersc
 # Warning: overworld_glitches is not available and minor_glitches is only partially implemented on the door-rando version
 glitches_required: # Determine the logic required to complete the seed
   none: 50 # No glitches required
-  silverless_only: 0 # *** FORK ONLY *** # Identical to no glitches, except silverless ganon is not considered a glitch and may be required
   minor_glitches: 0 # Puts fake flipper, waterwalk, super bunny shenanigans, and etc into logic
   overworld_glitches: 0 # Assumes the player has knowledge of both overworld major glitches (boots clips, mirror clips) and minor glitches
   no_logic: 0 # Your own items are placed with no regard to any logic; such as your Fire Rod can be on your Trinexx.
   # Other players items are placed into your world under OWG logic
+  # Fork-specific settings
+  silverless_only: 0 # Identical to no glitches, except silverless ganon is not considered a glitch and may be required
 dark_room_logic: # Logic for unlit dark rooms
   lamp: 50 # require the Lamp for these rooms to be considered accessible.
   torches: 0 # in addition to lamp, allow the fire rod and presence of easily accessible torches for access
-  easy_dark: 0 # *** FORK ONLY *** # some rooms commonly done in the dark (e.g. old man cave) will always be considered doable, other rooms are with torches logic
   none: 0 # all dark rooms are always considered doable, meaning this may force completion of rooms in complete darkness
+  # Fork-specific settings
+  easy_dark_rooms: 0 # some rooms commonly done in the dark (e.g. old man cave) will always be considered doable, other rooms are with torches logic
+  medium_dark_rooms: 0 # adds in less common rooms (e.g. eastern boss, turtle rock) while still leaving out the worst offenders (e.g. mire)
+  hard_dark_rooms: 0 # alias for "none"
 restrict_dungeon_item_on_boss: # aka ambrosia boss items
   on: 0 # prevents unshuffled compasses, maps and keys to be boss drops, they can still drop keysanity and other players' items
   off: 50

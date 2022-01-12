@@ -42,8 +42,6 @@ def set_rules(world, player):
     else:
         raise NotImplementedError(f'Not implemented yet: Logic - {world.logic[player]}')
 
-    lamp_rules(world, player)
-
     ganon = world.get_location('Ganon', player)
     set_rule(ganon, lambda state: GanonDefeatRule(state, player))
     if world.goal[player] == 'dungeons':
@@ -94,14 +92,16 @@ def add_rule(spot, rule, combine='and'):
 def or_rule(rule1, rule2):
     return lambda state: rule1(state) or rule2(state)
 
-def add_lamp_requirement(world: World, spot, player: int, has_accessible_torch: bool = False, easy_dark_room: bool = False):
-    if world.dark_room_logic[player] == "none":
+def add_lamp_requirement(world: World, spot, player: int, dark_difficulty: str = 'hard', has_accessible_torch: bool = False):
+    if world.dark_room_logic[player] in ["hard_dark_rooms", "none"]:
         pass # Assumed always possible
-    elif world.dark_room_logic[player] in ["easy_dark"] and easy_dark_room:
+    elif world.dark_room_logic[player] in ["medium_dark_rooms"] and dark_difficulty == 'medium':
         pass # Assumed always possible
-    elif world.dark_room_logic[player] in ["easy_dark", "torches"] and has_accessible_torch:
+    elif world.dark_room_logic[player] in ["medium_dark_rooms", "easy_dark_rooms"] and dark_difficulty == 'easy':
+        pass # Assumed always possible
+    elif world.dark_room_logic[player] in ["medium_dark_rooms", "easy_dark_rooms", "torches"] and has_accessible_torch:
         add_rule(spot, lambda state: state.has('Lamp', player) or state.has('Fire Rod', player))
-    elif world.dark_room_logic[player] in ["easy_dark", "torches", "lamp"]:
+    elif world.dark_room_logic[player] in ["medium_dark_rooms", "easy_dark_rooms", "torches", "lamp"]:
         add_rule(spot, lambda state: state.has('Lamp', player))
     else:
         raise ValueError(f"Unknown Dark Room Logic: {world.dark_room_logic[player]}")
@@ -767,7 +767,7 @@ def no_glitches_rules(world, player):
     #     add_rule(world.get_location(location, player), lambda state: state.has('Hookshot', player))
     set_rule(world.get_entrance('Paradox Cave Push Block Reverse', player), lambda state: False)  # no glitches does not require block override
     set_rule(world.get_entrance('Paradox Cave Bomb Jump', player), lambda state: False)
-
+    add_conditional_lamps(world, player)
 
 def minor_glitches_rules(world, player):
     # Note: ancilla deletion is not considered in logic at this time
@@ -794,9 +794,9 @@ def minor_glitches_rules(world, player):
 
     set_rule(world.get_entrance('Paradox Cave Push Block Reverse', player), lambda state: state.has('Mirror', player)) # block deletion in logic
     set_rule(world.get_entrance('Paradox Cave Bomb Jump', player), lambda state: False)
+    add_conditional_lamps(world, player)
 
-
-def lamp_rules(world, player):
+def add_conditional_lamps(world, player):
     # Light cones in standard depend on which world we actually are in, not which one the location would normally be
     # We add Lamp requirements only to those locations which lie in the dark world (or everything if open
     DW_Entrances = ['Bumper Cave (Bottom)', 'Superbunny Cave (Top)', 'Superbunny Cave (Bottom)', 'Hookshot Cave', 'Bumper Cave (Top)', 'Hookshot Cave Back Entrance', 'Dark Death Mountain Ledge (East)',
@@ -808,87 +808,92 @@ def lamp_rules(world, player):
                 return True
         return False
 
-    def add_conditional_lamp(spot, region, spottype='Location', accessible_torch=False, easy_room=False):
+    def add_conditional_lamp(spot, region, spottype='Location', dark_difficulty='hard', accessible_torch=False):
         if (not world.dark_world_light_cone and check_is_dark_world(world.get_region(region, player))) or (
                 not world.light_world_light_cone and not check_is_dark_world(world.get_region(region, player))):
             if spottype == 'Location':
                 spot = world.get_location(spot, player)
             else:
                 spot = world.get_entrance(spot, player)
-            add_lamp_requirement(world, spot, player, accessible_torch, easy_room)
+            add_lamp_requirement(world, spot, player, dark_difficulty, accessible_torch)
 
     dark_rooms = {
-        'TR Dark Ride': {'sewer': False, 'entrances': ['TR Dark Ride Up Stairs', 'TR Dark Ride SW'], 'locations': [], 'easy_torches': []},
-        'Mire Dark Shooters': {'sewer': False, 'entrances': ['Mire Dark Shooters Up Stairs', 'Mire Dark Shooters SW', 'Mire Dark Shooters SE'], 'locations': [], 'easy_torches': []},
-        'Mire Key Rupees': {'sewer': False, 'entrances': ['Mire Key Rupees NE'], 'locations': [], 'easy_torches': []},
-        'Mire Block X': {'sewer': False, 'entrances': ['Mire Block X NW', 'Mire Block X WS'], 'locations': [], 'easy_torches': []},
-        'Mire Tall Dark and Roomy': {'sewer': False, 'entrances': ['Mire Tall Dark and Roomy ES', 'Mire Tall Dark and Roomy WS', 'Mire Tall Dark and Roomy WN'], 'locations': [], 'easy_torches': []},
-        'Mire Crystal Right': {'sewer': False, 'entrances': ['Mire Crystal Right ES'], 'locations': [], 'easy_torches': []},
-        'Mire Crystal Mid': {'sewer': False, 'entrances': ['Mire Crystal Mid NW'], 'locations': [], 'easy_torches': []},
-        'Mire Crystal Left': {'sewer': False, 'entrances': ['Mire Crystal Left WS'], 'locations': [], 'easy_torches': []},
-        'Mire Crystal Top': {'sewer': False, 'entrances': ['Mire Crystal Top SW'], 'locations': [], 'easy_torches': []},
-        'Mire Shooter Rupees': {'sewer': False, 'entrances': ['Mire Shooter Rupees EN'], 'locations': [], 'easy_torches': []},
-        'PoD Dark Alley': {'sewer': False, 'entrances': ['PoD Dark Alley NE'], 'locations': [], 'easy_torches': []},
-        'PoD Callback': {'sewer': False, 'entrances': ['PoD Callback WS', 'PoD Callback Warp'], 'locations': [], 'easy_torches': []},
-        'PoD Turtle Party': {'sewer': False, 'entrances': ['PoD Turtle Party ES', 'PoD Turtle Party NW'], 'locations': [], 'easy_torches': []},
-        'PoD Lonely Turtle': {'sewer': False, 'entrances': ['PoD Lonely Turtle SW', 'PoD Lonely Turtle EN'], 'locations': [], 'easy_torches': []},
-        'PoD Dark Pegs': {'sewer': False, 'entrances': ['PoD Dark Pegs Hammer Path', 'PoD Dark Pegs WN'], 'locations': [], 'easy_torches': []},
-        'PoD Dark Pegs Ladder': {'sewer': False, 'entrances': ['PoD Dark Pegs Up Ladder', 'PoD Dark Pegs Ladder Hammer Path', 'PoD Dark Pegs Ladder Cane Path'], 'locations': [], 'easy_torches': []},
-        'PoD Dark Pegs Switch': {'sewer': False, 'entrances': ['PoD Dark Pegs Switch Path'], 'locations': [], 'easy_torches': []},
-        'PoD Dark Basement': {'sewer': False, 'entrances': ['PoD Dark Basement W Up Stairs', 'PoD Dark Basement E Up Stairs'], 'locations': ['Palace of Darkness - Dark Basement - Left', 'Palace of Darkness - Dark Basement - Right'], 'easy_torches': ['PoD Dark Basement W Up Stairs', 'PoD Dark Basement E Up Stairs', 'Palace of Darkness - Dark Basement - Left', 'Palace of Darkness - Dark Basement - Right']},
-        'PoD Dark Maze': {'sewer': False, 'entrances': ['PoD Dark Maze EN', 'PoD Dark Maze E'], 'locations': ['Palace of Darkness - Dark Maze - Top', 'Palace of Darkness - Dark Maze - Bottom'], 'easy_torches': []},
-        'Eastern Dark Square': {'sewer': False, 'entrances': ['Eastern Dark Square NW', 'Eastern Dark Square Key Door WN', 'Eastern Dark Square EN'], 'locations': [], 'easy_torches': []},
-        'Eastern Dark Pots': {'sewer': False, 'entrances': ['Eastern Dark Pots WN'], 'locations': ['Eastern Palace - Dark Square Pot Key'], 'easy_torches': []},
-        'Eastern Darkness': {'sewer': False, 'entrances': ['Eastern Darkness S', 'Eastern Darkness Up Stairs', 'Eastern Darkness NE'], 'locations': ['Eastern Palace - Dark Eyegore Key Drop'], 'easy_torches': ['Eastern Darkness S']},
-        'Eastern Rupees': {'sewer': False, 'entrances': ['Eastern Rupees SE'], 'locations': [], 'easy_torches': []},
-        'Tower Lone Statue': {'sewer': False, 'entrances': ['Tower Lone Statue Down Stairs', 'Tower Lone Statue WN'], 'locations': [], 'easy_torches': []},
-        'Tower Dark Maze': {'sewer': False, 'entrances': ['Tower Dark Maze EN', 'Tower Dark Maze ES'], 'locations': ['Castle Tower - Dark Maze'], 'easy_torches': []},
-        'Tower Dark Chargers': {'sewer': False, 'entrances': ['Tower Dark Chargers WS', 'Tower Dark Chargers Up Stairs'], 'locations': [], 'easy_torches': []},
-        'Tower Dual Statues': {'sewer': False, 'entrances': ['Tower Dual Statues Down Stairs', 'Tower Dual Statues WS'], 'locations': [], 'easy_torches': []},
-        'Tower Dark Pits': {'sewer': False, 'entrances': ['Tower Dark Pits ES', 'Tower Dark Pits EN'], 'locations': [], 'easy_torches': []},
-        'Tower Dark Archers': {'sewer': False, 'entrances': ['Tower Dark Archers WN', 'Tower Dark Archers Up Stairs'], 'locations': ['Castle Tower - Dark Archer Key Drop'], 'easy_torches': []},
-        'Sewers Dark Cross': {'sewer': True, 'entrances': ['Sewers Dark Cross Key Door N', 'Sewers Dark Cross South Stairs'], 'locations': ['Sewers - Dark Cross'], 'easy_torches': []},
-        'Sewers Behind Tapestry': {'sewer': True, 'entrances': ['Sewers Behind Tapestry S', 'Sewers Behind Tapestry Down Stairs'], 'locations': [], 'easy_torches': []},
-        'Sewers Rope Room': {'sewer': True, 'entrances': ['Sewers Rope Room Up Stairs', 'Sewers Rope Room North Stairs'], 'locations': [], 'easy_torches': []},
-        'Sewers Water': {'sewer': True, 'entrances': ['Sewers Water S', 'Sewers Water W'], 'locations': [], 'easy_torches': ['Sewers Water S']},
-        'Sewers Key Rat': {'sewer': True, 'entrances': ['Sewers Key Rat E', 'Sewers Key Rat Key Door N'], 'locations': ['Hyrule Castle - Key Rat Key Drop'], 'easy_torches': []},
+        'TR Dark Ride': {'difficulty': 'medium', 'entrances': ['TR Dark Ride Up Stairs', 'TR Dark Ride SW'], 'locations': [], 'easy_torches': []},
+
+        'Mire Dark Shooters':       {'difficulty': 'hard', 'entrances': ['Mire Dark Shooters Up Stairs', 'Mire Dark Shooters SW', 'Mire Dark Shooters SE'], 'locations': [], 'easy_torches': []},
+        'Mire Key Rupees':          {'difficulty': 'hard', 'entrances': ['Mire Key Rupees NE'], 'locations': [], 'easy_torches': []},
+        'Mire Block X':             {'difficulty': 'hard', 'entrances': ['Mire Block X NW', 'Mire Block X WS'], 'locations': [], 'easy_torches': []},
+        'Mire Tall Dark and Roomy': {'difficulty': 'hard', 'entrances': ['Mire Tall Dark and Roomy ES', 'Mire Tall Dark and Roomy WS', 'Mire Tall Dark and Roomy WN'], 'locations': [], 'easy_torches': []},
+        'Mire Crystal Right':       {'difficulty': 'hard', 'entrances': ['Mire Crystal Right ES'], 'locations': [], 'easy_torches': []},
+        'Mire Crystal Mid':         {'difficulty': 'hard', 'entrances': ['Mire Crystal Mid NW'], 'locations': [], 'easy_torches': []},
+        'Mire Crystal Left':        {'difficulty': 'hard', 'entrances': ['Mire Crystal Left WS'], 'locations': [], 'easy_torches': []},
+        'Mire Crystal Top':         {'difficulty': 'hard', 'entrances': ['Mire Crystal Top SW'], 'locations': [], 'easy_torches': []},
+        'Mire Shooter Rupees':      {'difficulty': 'hard', 'entrances': ['Mire Shooter Rupees EN'], 'locations': [], 'easy_torches': []},
+
+        'PoD Dark Alley':       {'difficulty': 'hard', 'entrances': ['PoD Dark Alley NE'], 'locations': [], 'easy_torches': []},
+        'PoD Callback':         {'difficulty': 'hard', 'entrances': ['PoD Callback WS', 'PoD Callback Warp'], 'locations': [], 'easy_torches': []},
+        'PoD Turtle Party':     {'difficulty': 'hard', 'entrances': ['PoD Turtle Party ES', 'PoD Turtle Party NW'], 'locations': [], 'easy_torches': []},
+        'PoD Lonely Turtle':    {'difficulty': 'hard', 'entrances': ['PoD Lonely Turtle SW', 'PoD Lonely Turtle EN'], 'locations': [], 'easy_torches': []},
+        'PoD Dark Pegs':        {'difficulty': 'hard', 'entrances': ['PoD Dark Pegs Hammer Path', 'PoD Dark Pegs WN'], 'locations': [], 'easy_torches': []},
+        'PoD Dark Pegs Ladder': {'difficulty': 'hard', 'entrances': ['PoD Dark Pegs Up Ladder', 'PoD Dark Pegs Ladder Hammer Path', 'PoD Dark Pegs Ladder Cane Path'], 'locations': [], 'easy_torches': []},
+        'PoD Dark Pegs Switch': {'difficulty': 'hard', 'entrances': ['PoD Dark Pegs Switch Path'], 'locations': [], 'easy_torches': []},
+        'PoD Dark Basement':    {'difficulty': 'easy', 'entrances': ['PoD Dark Basement W Up Stairs', 'PoD Dark Basement E Up Stairs'], 'locations': ['Palace of Darkness - Dark Basement - Left', 'Palace of Darkness - Dark Basement - Right'], 'easy_torches': ['PoD Dark Basement W Up Stairs', 'PoD Dark Basement E Up Stairs', 'Palace of Darkness - Dark Basement - Left', 'Palace of Darkness - Dark Basement - Right']},
+        'PoD Dark Maze':        {'difficulty': 'hard', 'entrances': ['PoD Dark Maze EN', 'PoD Dark Maze E'], 'locations': ['Palace of Darkness - Dark Maze - Top', 'Palace of Darkness - Dark Maze - Bottom'], 'easy_torches': []},
+
+        'Eastern Dark Square': {'difficulty': 'easy', 'entrances': ['Eastern Dark Square NW', 'Eastern Dark Square Key Door WN', 'Eastern Dark Square EN'], 'locations': [], 'easy_torches': []},
+        'Eastern Dark Pots':   {'difficulty': 'easy', 'entrances': ['Eastern Dark Pots WN'], 'locations': ['Eastern Palace - Dark Square Pot Key'], 'easy_torches': []},
+        'Eastern Darkness':    {'difficulty': 'medium', 'entrances': ['Eastern Darkness S', 'Eastern Darkness Up Stairs', 'Eastern Darkness NE'], 'locations': ['Eastern Palace - Dark Eyegore Key Drop'], 'easy_torches': ['Eastern Darkness S']},
+        'Eastern Rupees':      {'difficulty': 'medium', 'entrances': ['Eastern Rupees SE'], 'locations': [], 'easy_torches': []},
+
+        'Tower Lone Statue':   {'difficulty': 'hard', 'entrances': ['Tower Lone Statue Down Stairs', 'Tower Lone Statue WN'], 'locations': [], 'easy_torches': []},
+        'Tower Dark Maze':     {'difficulty': 'hard', 'entrances': ['Tower Dark Maze EN', 'Tower Dark Maze ES'], 'locations': ['Castle Tower - Dark Maze'], 'easy_torches': []},
+        'Tower Dark Chargers': {'difficulty': 'hard', 'entrances': ['Tower Dark Chargers WS', 'Tower Dark Chargers Up Stairs'], 'locations': [], 'easy_torches': []},
+        'Tower Dual Statues':  {'difficulty': 'hard', 'entrances': ['Tower Dual Statues Down Stairs', 'Tower Dual Statues WS'], 'locations': [], 'easy_torches': []},
+        'Tower Dark Pits':     {'difficulty': 'hard', 'entrances': ['Tower Dark Pits ES', 'Tower Dark Pits EN'], 'locations': [], 'easy_torches': []},
+        'Tower Dark Archers':  {'difficulty': 'hard', 'entrances': ['Tower Dark Archers WN', 'Tower Dark Archers Up Stairs'], 'locations': ['Castle Tower - Dark Archer Key Drop'], 'easy_torches': []},
+
+        'Sewers Dark Cross':      {'sewer': True, 'difficulty': 'easy', 'entrances': ['Sewers Dark Cross Key Door N', 'Sewers Dark Cross South Stairs'], 'locations': ['Sewers - Dark Cross'], 'easy_torches': []},
+        'Sewers Behind Tapestry': {'sewer': True, 'difficulty': 'easy', 'entrances': ['Sewers Behind Tapestry S', 'Sewers Behind Tapestry Down Stairs'], 'locations': [], 'easy_torches': []},
+        'Sewers Rope Room':       {'sewer': True, 'difficulty': 'easy', 'entrances': ['Sewers Rope Room Up Stairs', 'Sewers Rope Room North Stairs'], 'locations': [], 'easy_torches': []},
+        'Sewers Water':           {'sewer': True, 'difficulty': 'easy', 'entrances': ['Sewers Water S', 'Sewers Water W'], 'locations': [], 'easy_torches': ['Sewers Water S']},
+        'Sewers Key Rat':         {'sewer': True, 'difficulty': 'easy', 'entrances': ['Sewers Key Rat E', 'Sewers Key Rat Key Door N'], 'locations': ['Hyrule Castle - Key Rat Key Drop'], 'easy_torches': []},
     }
 
     dark_debug_set = set()
     for region, info in dark_rooms.items():
         is_dark = False
-        is_easy = False
 
         # sewer light cones
         if not world.sewer_light_cone[player]:
             is_dark = True
-        elif world.doorShuffle[player] != 'crossed' and not info['sewer']:
+        elif world.doorShuffle[player] != 'crossed' and not info.get('sewer', False):
             is_dark = True
         elif world.doorShuffle[player] == 'crossed':
             sewer_builder = world.dungeon_layouts[player]['Hyrule Castle']
             is_dark = region not in sewer_builder.master_sector.region_set()
-
-        if world.doorShuffle[player] == 'crossed':
-            pass # No dungeon dark room is easy when you don't even know what room you're in in the first place
-        elif region in \
-            ['PoD Dark Basement', 'Eastern Dark Square', 'Eastern Dark Pots',
-             'Sewers Dark Cross', 'Sewers Behind Tapestry', 'Sewers Rope Room', 'Sewers Water', 'Sewers Key Rat']:
-            is_easy = True
+        # No dungeon dark room is easy when you don't even know what room you're in in the first place
+        dark_difficulty = 'hard' if world.doorShuffle[player] == 'crossed' else info['difficulty']
 
         if is_dark:
             dark_debug_set.add(region)
             for ent in info['entrances']:
-                add_conditional_lamp(ent, region, 'Entrance', ent in info['easy_torches'], is_easy)
+                add_conditional_lamp(ent, region, 'Entrance', dark_difficulty, ent in info['easy_torches'])
             for loc in info['locations']:
-                add_conditional_lamp(loc, region, 'Location', loc in info['easy_torches'], is_easy)
+                add_conditional_lamp(loc, region, 'Location', dark_difficulty, loc in info['easy_torches'])
     logging.getLogger('').debug('Non Dark Regions: ' + ', '.join(set(dark_rooms.keys()).difference(dark_debug_set)))
 
-    add_conditional_lamp('Old Man', 'Old Man Cave', 'Location', easy_room=True) # Commonly done in both directions
-    add_conditional_lamp('Old Man Cave Exit (East)', 'Old Man Cave', 'Entrance', easy_room=True) # Commonly done in both directions
-    add_conditional_lamp('Death Mountain Return Cave Exit (East)', 'Death Mountain Return Cave', 'Entrance')
-    add_conditional_lamp('Death Mountain Return Cave Exit (West)', 'Death Mountain Return Cave', 'Entrance')
-    add_conditional_lamp('Old Man House Front to Back', 'Old Man House', 'Entrance', easy_room=True) # Hold down-right
-    add_conditional_lamp('Old Man House Back to Front', 'Old Man House', 'Entrance', easy_room=True) # Hold up-left
+    if world.shuffle[player] == 'vanilla': # Easy cave logic only for unshuffled
+        add_conditional_lamp('Old Man', 'Old Man Cave', dark_difficulty='easy') # commonly done out of logic
+        add_conditional_lamp('Old Man Cave Exit (East)', 'Old Man Cave', 'Entrance', dark_difficulty='easy') # backwards as well
+        add_conditional_lamp('Old Man House Front to Back', 'Old Man House', 'Entrance', dark_difficulty='easy') # hold down-right
+        add_conditional_lamp('Old Man House Back to Front', 'Old Man House', 'Entrance', dark_difficulty='easy') # hold up-left
+    else:
+        add_conditional_lamp('Old Man', 'Old Man Cave', dark_difficulty='medium') # commonly done out of logic
+        add_conditional_lamp('Old Man Cave Exit (East)', 'Old Man Cave', 'Entrance', dark_difficulty='medium') # backwards as well
+        add_conditional_lamp('Old Man House Front to Back', 'Old Man House', 'Entrance', dark_difficulty='medium') # hold down-right
+        add_conditional_lamp('Old Man House Back to Front', 'Old Man House', 'Entrance', dark_difficulty='medium') # hold up-left
+    add_conditional_lamp('Death Mountain Return Cave Exit (East)', 'Death Mountain Return Cave', 'Entrance', dark_difficulty='hard')
+    add_conditional_lamp('Death Mountain Return Cave Exit (West)', 'Death Mountain Return Cave', 'Entrance', dark_difficulty='hard')
 
 
 def open_rules(world, player):

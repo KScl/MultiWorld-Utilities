@@ -457,7 +457,9 @@
     "choices": [
       "lamp",
       "torches",
-      "easy_dark",
+      "easy_dark_rooms",
+      "medium_dark_rooms",
+      "hard_dark_rooms",
       "none"
     ]
   },

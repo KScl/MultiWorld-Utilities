@@ -521,7 +521,7 @@ def roll_settings(weights: dict, plando_options: typing.Set[str] = frozenset(("b
         ret.dark_room_logic = "none"
     if ret.dark_room_logic == "sconces":
         ret.dark_room_logic = "torches"
-    if ret.dark_room_logic not in {"lamp", "torches", "easy_dark", "none"}:
+    if ret.dark_room_logic not in {"lamp", "torches", "easy_dark_rooms", "medium_dark_rooms", "hard_dark_rooms", "none"}:
         raise ValueError(f"Unknown Dark Room Logic: \"{ret.dark_room_logic}\"")
 
     ret.restrict_dungeon_item_on_boss = get_choice('restrict_dungeon_item_on_boss', weights, False)
