@@ -676,7 +676,7 @@ def get_pool_core(world, player: int):
         pool.extend(diff.universal_keys)
         item_to_place = 'Small Key (Universal)' if goal != 'icerodhunt' else 'Nothing'
 
-        if mode == 'standard' and world.doorShuffle[player] == 'vanilla':
+        if mode == 'standard':
             key_location = world.random.choice(['Secret Passage', 'Hyrule Castle - Boomerang Chest', 'Hyrule Castle - Map Chest', 'Hyrule Castle - Zelda\'s Chest', 'Sewers - Dark Cross'])
             place_item(key_location, item_to_place)
         else:
