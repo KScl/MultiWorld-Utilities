@@ -323,6 +323,8 @@ linked_options:
       compass_shuffle: true
       map_shuffle: true
       smallkey_shuffle: true
+    # Fork-specific setting example
+    append: # These get added on top of already existing options if the percentage chance triggers
       local_items: # Forces keys to be local to your own world
         - "Small Keys"
         - "Big Keys"
@@ -349,6 +351,12 @@ triggers:
     percentage: 0 # AND has a 0 percent chance (meaning this is default disabled, just to show how it works)
     options: # then inserts these options
       swords: assured
+  # Fork-specific settings example
+  - option_name: glitches_required # targets glitches_required
+    option_result: minor_glitches # if it rolls minor_glitches
+    append: # the following options will be appended to whatever is already present (instead of completely overwriting)
+      startinventory:
+        Rupee (1): 1 # start with a single rupee, visible from file select (as a hint, perhaps)
 ### door rando only options ###
 door_shuffle: # Only available if the host uses the doors branch, it is ignored otherwise
   vanilla: 50 # Everything should be like in vanilla
