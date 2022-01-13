@@ -392,8 +392,7 @@ def set_up_shops(world, player: int):
 def shuffle_shops(world, items, player: int):
     option = world.shop_shuffle[player]
     if 'u' in option:
-        progressive = world.want_progressives(player, 'capacity')
-        progressive &= world.goal == 'icerodhunt'
+        progressive = False if world.goal[player] == 'icerodhunt' else world.want_progressives(player, 'capacity')
         new_items = ["Bomb Upgrade (+5)"] * 6
         new_items.append("Bomb Upgrade (+5)" if progressive else "Bomb Upgrade (+10)")
 
@@ -421,7 +420,7 @@ def shuffle_shops(world, items, player: int):
                 bombupgrades = sum(1 for item in new_items if 'Bomb Upgrade' in item)
                 arrowupgrades = sum(1 for item in new_items if 'Arrow Upgrade' in item)
                 if bombupgrades:
-                    capacityshop.add_inventory(1, 'Bomb Upgrade (+5)', 100, bombupgrades)
+                    capacityshop.add_inventory(0, 'Bomb Upgrade (+5)', 100, bombupgrades)
                 if arrowupgrades:
                     capacityshop.add_inventory(1, 'Arrow Upgrade (+5)', 100, arrowupgrades)
         else:

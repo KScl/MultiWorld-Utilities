@@ -486,7 +486,7 @@ def generate_itempool(world, player: int):
     progressionitems = []
     nonprogressionitems = []
     for item in items:
-        if item.advancement or item.type:
+        if not item.is_nonprogression():
             progressionitems.append(item)
         else:
             nonprogressionitems.append(GetBeemizerItem(world, item.player, item))

@@ -1989,6 +1989,9 @@ class Item(object):
     def compass(self) -> bool:
         return self.type == 'Compass'
 
+    def is_nonprogression(self) -> bool:
+        return not self.advancement and self.type in [None, 'Junk']
+
     def __str__(self):
         return str(self.__unicode__())
 
