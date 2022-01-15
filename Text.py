@@ -592,8 +592,9 @@ class MultiByteCoreTextMapper(object):
     }
 
     @classmethod
-    def convert(cls, text, pause=True, wrap=14):
-        text = text.upper()
+    def convert(cls, text, pause=True, wrap=17):
+        # no longer convert case
+        # text = text.upper()
         lines = text.split('\n')
         outbuf = bytearray()
         lineindex = 0
@@ -701,7 +702,7 @@ class CompressedTextMapper(object):
     }
 
     @classmethod
-    def convert(cls, text, pause=True, max_bytes_expanded=0x800, wrap=14):
+    def convert(cls, text, pause=True, max_bytes_expanded=0x800, wrap=17):
         inbuf = MultiByteCoreTextMapper.convert(text, pause, wrap)
 
         # Links name will need 8 bytes in the target buffer
@@ -719,7 +720,7 @@ class CompressedTextMapper(object):
                 outbuf.append(val)
             elif val == 0x00:
                 outbuf.append(inbuf.pop())
-            elif val == 0x01: #kanji
+            elif val == 0x01: # lowercase (formerly kanji)
                 outbuf.append(0xFD)
                 outbuf.append(inbuf.pop())
             elif val >= 0x67:
@@ -755,21 +756,24 @@ class CharTextMapper(object):
         return buf
 
 class RawMBTextMapper(CharTextMapper):
+    # TODO: Replacing kanji works but it negates most of the benefits of the compression above
+    #       Possibly find some better way to do things
     char_map = {' ': 0xFF,
                 '『': 0xC4,
                 '』': 0xC5,
                 '?': 0xC6,
                 '!': 0xC7,
-                ',': 0xC8,
+                ',': [0x01, 0x1C],
                 '-': 0xC9,
                 "🡄": 0xCA,
                 "🡆": 0xCB,
-                '…': 0xCC,
-                '.': 0xCD,
+                '…': [0x01, 0x1B],
+                '.': [0x01, 0x1A],
                 '~': 0xCE,
                 '～': 0xCE,
+                '&': [0x01, 0x1E],
                 '@': [0x6A], # Links name (only works if compressed)
-                '>': [0x00, 0xD2, 0x00, 0xD3], # Link's face
+                '>': [0x00, 0xD2, 0x01, 0x1F], # Link's face
                 "'": 0xD8,
                 '’': 0xD8,
                 '%': 0xDD, # Hylian Bird
@@ -948,275 +952,21 @@ class RawMBTextMapper(CharTextMapper):
                 'ェ': 0x9E,
                 'ォ': 0x9F}
 
-    kanji = {"娘": 0x00,
-             "城": 0x01,
-             "行": 0x02,
-             "教": 0x03,
-             "会": 0x04,
-             "神": 0x05,
-             "父": 0x06,
-             "訪": 0x07,
-             "頼": 0x08,
-             "通": 0x09,
-             "願": 0x0A,
-             "平": 0x0B,
-             "和": 0x0C,
-             "司": 0x0D,
-             "書": 0x0E,
-             "戻": 0x0F,
-             "様": 0x10,
-             "子": 0x11,
-             "湖": 0x12,
-             "達": 0x13,
-             "彼": 0x14,
-             "女": 0x15,
-             "言": 0x16,
-             "祭": 0x17,
-             "早": 0x18,
-             "雨": 0x19,
-             "剣": 0x1A,
-             "盾": 0x1B,
-             "解": 0x1C,
-             "抜": 0x1D,
-             "者": 0x1E,
-             "味": 0x1F,
-             "方": 0x20,
-             "無": 0x21,
-             "事": 0x22,
-             "出": 0x23,
-             "本": 0x24,
-             "当": 0x25,
-             "私": 0x26,
-             "他": 0x27,
-             "救": 0x28,
-             "倒": 0x29,
-             "度": 0x2A,
-             "国": 0x2B,
-             "退": 0x2C,
-             "魔": 0x2D,
-             "伝": 0x2E,
-             "説": 0x2F,
-             "必": 0x30,
-             "要": 0x31,
-             "良": 0x32,
-             "地": 0x33,
-             "図": 0x34,
-             "印": 0x35,
-             "思": 0x36,
-             "気": 0x37,
-             "人": 0x38,
-             "間": 0x39,
-             "兵": 0x3A,
-             "病": 0x3B,
-             "法": 0x3C,
-             "屋": 0x3D,
-             "手": 0x3E,
-             "住": 0x3F,
-             "連": 0x40,
-             "恵": 0x41,
-             "表": 0x42,
-             "金": 0x43,
-             "王": 0x44,
-             "信": 0x45,
-             "裏": 0x46,
-             "取": 0x47,
-             "引": 0x48,
-             "入": 0x49,
-             "口": 0x4A,
-             "開": 0x4B,
-             "見": 0x4C,
-             "正": 0x4D,
-             "幸": 0x4E,
-             "運": 0x4F,
-             "呼": 0x50,
-             "物": 0x51,
-             "付": 0x52,
-             "紋": 0x53,
-             "章": 0x54,
-             "所": 0x55,
-             "家": 0x56,
-             "闇": 0x57,
-             "読": 0x58,
-             "左": 0x59,
-             "側": 0x5A,
-             "札": 0x5B,
-             "穴": 0x5C,
-             "道": 0x5D,
-             "男": 0x5E,
-             "大": 0x5F,
-             "声": 0x60,
-             "下": 0x61,
-             "犯": 0x62,
-             "花": 0x63,
-             "深": 0x64,
-             "森": 0x65,
-             "水": 0x66,
-             "若": 0x67,
-             "美": 0x68,
-             "探": 0x69,
-             "今": 0x6A,
-             "士": 0x6B,
-             "店": 0x6C,
-             "好": 0x6D,
-             "代": 0x6E,
-             "名": 0x6F,
-             "迷": 0x70,
-             "立": 0x71,
-             "上": 0x72,
-             "光": 0x73,
-             "点": 0x74,
-             "目": 0x75,
-             "的": 0x76,
-             "押": 0x77,
-             "前": 0x78,
-             "夜": 0x79,
-             "十": 0x7A,
-             "字": 0x7B,
-             "北": 0x7C,
-             "急": 0x7D,
-             "昔": 0x7E,
-             "果": 0x7F,
-             "奥": 0x80,
-             "選": 0x81,
-             "続": 0x82,
-             "結": 0x83,
-             "定": 0x84,
-             "悪": 0x85,
-             "向": 0x86,
-             "歩": 0x87,
-             "時": 0x88,
-             "使": 0x89,
-             "古": 0x8A,
-             "何": 0x8B,
-             "村": 0x8C,
-             "長": 0x8D,
-             "配": 0x8E,
-             "匹": 0x8F,
-             "殿": 0x90,
-             "守": 0x91,
-             "精": 0x92,
-             "知": 0x93,
-             "山": 0x94,
-             "誰": 0x95,
-             "足": 0x96,
-             "冷": 0x97,
-             "黄": 0x98,
-             "力": 0x99,
-             "宝": 0x9A,
-             "求": 0x9B,
-             "先": 0x9C,
-             "消": 0x9D,
-             "封": 0x9E,
-             "捕": 0x9F,
-             "勇": 0xA0,
-             "年": 0xA1,
-             "姿": 0xA2,
-             "話": 0xA3,
-             "色": 0xA4,
-             "々": 0xA5,
-             "真": 0xA6,
-             "紅": 0xA7,
-             "場": 0xA8,
-             "炎": 0xA9,
-             "空": 0xAA,
-             "面": 0xAB,
-             "音": 0xAC,
-             "吹": 0xAD,
-             "中": 0xAE,
-             "祈": 0xAF,
-             "起": 0xB0,
-             "右": 0xB1,
-             "念": 0xB2,
-             "再": 0xB3,
-             "生": 0xB4,
-             "庭": 0xB5,
-             "路": 0xB6,
-             "部": 0xB7,
-             "川": 0xB8,
-             "血": 0xB9,
-             "完": 0xBA,
-             "矢": 0xBB,
-             "現": 0xBC,
-             "在": 0xBD,
-             "全": 0xBE,
-             "体": 0xBF,
-             "文": 0xC0,
-             "秘": 0xC1,
-             "密": 0xC2,
-             "感": 0xC3,
-             "賢": 0xC4,
-             "陣": 0xC5,
-             "残": 0xC6,
-             "百": 0xC7,
-             "近": 0xC8,
-             "朝": 0xC9,
-             "助": 0xCA,
-             "術": 0xCB,
-             "粉": 0xCC,
-             "火": 0xCD,
-             "注": 0xCE,
-             "意": 0xCF,
-             "走": 0xD0,
-             "敵": 0xD1,
-             "玉": 0xD2,
-             "復": 0xD3,
-             "活": 0xD4,
-             "塔": 0xD5,
-             "来": 0xD6,
-             "帰": 0xD7,
-             "忘": 0xD8,
-             "東": 0xD9,
-             "青": 0xDA,
-             "持": 0xDB,
-             "込": 0xDC,
-             "逃": 0xDD,
-             "銀": 0xDE,
-             "勝": 0xDF,
-             "集": 0xE0,
-             "始": 0xE1,
-             "攻": 0xE2,
-             "撃": 0xE3,
-             "命": 0xE4,
-             "老": 0xE5,
-             "心": 0xE6,
-             "新": 0xE7,
-             "世": 0xE8,
-             "界": 0xE9,
-             "箱": 0xEA,
-             "木": 0xEB,
-             "対": 0xEC,
-             "特": 0xED,
-             "賊": 0xEE,
-             "洞": 0xEF,
-             "支": 0xF0,
-             "盗": 0xF1,
-             "族": 0xF2,
-             "能": 0xF3,
-             #"力": 0xF4,
-             "多": 0xF5,
-             "聖": 0xF6,
-             "両": 0xF7,
-             "民": 0xF8,
-             "予": 0xF9,
-             "小": 0xFA,
-             "強": 0xFB,
-             "投": 0xFC,
-             "服": 0xFD,
-             "月": 0xFE,
-             "姫": 0xFF}
     alpha_offset = 0x49
     number_offset = 0x70
 
     @classmethod
     def map_char(cls, char):
-        if char in cls.kanji:
-            return [0x01, cls.kanji[char]]
+        if 0x61 <= ord(char) <= 0x7A:
+            return [0x01, ord(char) - 0x61]
+        elif 0x41 <= ord(char) <= 0x5A:
+            return 0x20 + ord(char) + cls.alpha_offset
         return super().map_char(char)
 
     @classmethod
     def convert(cls, text):
         buf = bytearray()
-        for char in text.lower():
+        for char in text: # no longer lowercased
             res = cls.map_char(char)
             if isinstance(res, int):
                 buf.extend([0x00, res])
@@ -1497,16 +1247,16 @@ class TextTable(object):
 
     def setDefaultText(self):
         text = self._text
-        text['set_cursor'] = bytearray([0xFB, 0xFC, 0x00, 0xF9, 0xFF, 0xFF, 0xFF, 0xF8, 0xFF, 0xFF, 0xE4, 0xFE, 0x68])
-        text['set_cursor2'] = bytearray([0xFB, 0xFC, 0x00, 0xF8, 0xFF, 0xFF, 0xFF, 0xF9, 0xFF, 0xFF, 0xE4, 0xFE, 0x68])
-        text['game_over_menu'] = CompressedTextMapper.convert("{SPEED0}\nSave-Continue\nSave-Quit\nContinue", False)
+        text['set_cursor'] = bytearray([0xFB, 0xFC, 0x00, 0xFE, 0x70, 0xF8, 0xFF, 0xFF, 0xE4, 0xFE, 0x68]) # Originally F9 FF FF FF F8 FF FF E4
+        text['set_cursor2'] = bytearray([0xFB, 0xFC, 0x00, 0xFE, 0x70, 0xF9, 0xFF, 0xFF, 0xE4, 0xFE, 0x68]) # Originally F8 FF FF FF F9 FF FF E4
+        text['game_over_menu'] = CompressedTextMapper.convert("{SPEED0}\nSave & Continue\nSave & Quit\nContinue", False)
         text['var_test'] = CompressedTextMapper.convert("0= ᚋ, 1= ᚌ\n2= ᚍ, 3= ᚎ", False)
         text['follower_no_enter'] = CompressedTextMapper.convert("Can't you take me some place nice.")
-        text['choice_1_3'] = bytearray([0xFB, 0xFC, 0x00, 0xF7, 0xE4, 0xF8, 0xFF, 0xF9, 0xFF, 0xFE, 0x71])
-        text['choice_2_3'] = bytearray([0xFB, 0xFC, 0x00, 0xF7, 0xFF, 0xF8, 0xE4, 0xF9, 0xFF, 0xFE, 0x71])
-        text['choice_3_3'] = bytearray([0xFB, 0xFC, 0x00, 0xF7, 0xFF, 0xF8, 0xFF, 0xF9, 0xE4, 0xFE, 0x71])
-        text['choice_1_2'] = bytearray([0xFB, 0xFC, 0x00, 0xF7, 0xE4, 0xF8, 0xFF, 0xFE, 0x72])
-        text['choice_2_2'] = bytearray([0xFB, 0xFC, 0x00, 0xF7, 0xFF, 0xF8, 0xE4, 0xFE, 0x72])
+        text['choice_1_3'] = bytearray([0xFB, 0xFC, 0x00, 0xFE, 0x70, 0xF7, 0xE4, 0xFE, 0x71]) # Originally F7 E4 F8 FF F9 FF
+        text['choice_2_3'] = bytearray([0xFB, 0xFC, 0x00, 0xFE, 0x70, 0xF8, 0xE4, 0xFE, 0x71]) # Originally F7 FF F8 E4 F9 FF
+        text['choice_3_3'] = bytearray([0xFB, 0xFC, 0x00, 0xFE, 0x70, 0xF9, 0xE4, 0xFE, 0x71]) # Originally F7 FF F8 FF F9 E4
+        text['choice_1_2'] = bytearray([0xFB, 0xFC, 0x00, 0xFE, 0x70, 0xF7, 0xE4, 0xFE, 0x72]) # Originally F7 E4 F8 FF
+        text['choice_2_2'] = bytearray([0xFB, 0xFC, 0x00, 0xFE, 0x70, 0xF8, 0xE4, 0xFE, 0x72]) # Originally F7 FF F8 E4
         text['uncle_leaving_text'] = CompressedTextMapper.convert("I'm just going out for a pack of smokes.")
         text['uncle_dying_sewer'] = CompressedTextMapper.convert("I've fallen and I can't get up, take this.")
         text['tutorial_guard_1'] = CompressedTextMapper.convert("Only adults should travel at night.")
@@ -1715,9 +1465,9 @@ class TextTable(object):
         text['telepathic_tile_tower_of_hera_entrance'] = CompressedTextMapper.convert(
             "{NOBORDER}\nThis is a bad place, with a guy who will make you fall…\n\n\na lot.")
         text['houlihan_room'] = CompressedTextMapper.convert(
-            "Have a Multiworld Tournament\nand we can list the winners here.")
-        text['caught_a_bee'] = CompressedTextMapper.convert("Caught a Bee\n  ≥ keep\n    release\n{CHOICE}")
-        text['caught_a_fairy'] = CompressedTextMapper.convert("Caught Fairy!\n  ≥ keep\n    release\n{CHOICE}")
+            "My name is\nChris Houlihan!\n\nHere's a bunch of money for finding me!")
+        text['caught_a_bee'] = CompressedTextMapper.convert("Caught a Bee\n  ≥ Keep\n    Release\n{CHOICE}")
+        text['caught_a_fairy'] = CompressedTextMapper.convert("Caught a Fairy!\n  ≥ Keep\n    Release\n{CHOICE}")
         text['no_empty_bottles'] = CompressedTextMapper.convert("Whoa, bucko!\nNo empty bottles.")
         text['game_race_boy_time'] = CompressedTextMapper.convert("Your time was\nᚎᚍ min ᚌᚋ sec.")
         text['game_race_girl'] = CompressedTextMapper.convert("You have 15 seconds,\nGo… Go… Go…")
@@ -1777,7 +1527,7 @@ class TextTable(object):
         # 100
         text['dark_sanctuary_no'] = CompressedTextMapper.convert("Then go away!")
         text['dark_sanctuary_hint_1'] = CompressedTextMapper.convert("There is a thief in the desert, he can open creepy chests that follow you. But now that we have that out of the way, Do you like my hair? I've spent eons getting it this way.")
-        text['dark_sanctuary_yes'] = CompressedTextMapper.convert("With Crystals 5&6, you can find a great fairy in the pyramid.\n\nFlomp Flomp, Whizzle Whomp")
+        text['dark_sanctuary_yes'] = CompressedTextMapper.convert("With Crystals 5 & 6, you can find a great fairy in the pyramid.\n\nFlomp Flomp, Whizzle Whomp")
         text['dark_sanctuary_hint_2'] = CompressedTextMapper.convert(
             "All I can say is that my life is pretty plain,\n"
             + "I like watchin' the puddles gather rain,\n"
@@ -1786,9 +1536,9 @@ class TextTable(object):
             + "It's not sane")
         text['sick_kid_no_bottle'] = CompressedTextMapper.convert("{BOTTOM}\nI'm sick! Show me a bottle, get something!")
         text['sick_kid_trade'] = CompressedTextMapper.convert("{BOTTOM}\nCool Bottle! Here's something for you.")
-        text['sick_kid_post_trade'] = CompressedTextMapper.convert("{BOTTOM}\nLeave me alone\nI'm sick. You have my item.")
-        text['desert_thief_sitting'] = CompressedTextMapper.convert("………………………")
-        text['desert_thief_following'] = CompressedTextMapper.convert("why……………")
+        text['sick_kid_post_trade'] = CompressedTextMapper.convert("{BOTTOM}\nI'm sick, let me rest. You already have my item.")
+        text['desert_thief_sitting'] = CompressedTextMapper.convert(".................")
+        text['desert_thief_following'] = CompressedTextMapper.convert("why..............")
         text['desert_thief_question'] = CompressedTextMapper.convert("I was a thief, I open purple chests!\nKeep secret?\n  ≥ sure thing\n    never!\n{CHOICE}")
         text['desert_thief_question_yes'] = CompressedTextMapper.convert("Cool, bring me any purple chests you find.")
         text['desert_thief_after_item_get'] = CompressedTextMapper.convert("You tell anyone and I will give you such a pinch!")
@@ -1920,7 +1670,7 @@ class TextTable(object):
         text['telepathic_tile_south_east_darkworld_cave'] = CompressedTextMapper.convert("~~ dev cave ~~\n  no farming\n   required")
         text['cukeman'] = CompressedTextMapper.convert("Hey mon!")
         text['cukeman_2'] = CompressedTextMapper.convert("You found Shabadoo, huh?\nNiiiiice.")
-        text['potion_shop_no_cash'] = CompressedTextMapper.convert("Yo! I'm not running a charity here.")
+        text['potion_shop_no_cash'] = CompressedTextMapper.convert("Yo! Do I look like I'm running a charity here?")
         text['kakariko_powdered_chicken'] = CompressedTextMapper.convert("Smallhacker…\n\n\nWas hiding, you found me!\n\n\nOkay, you can leave now.")
         text['game_chest_south_of_kakariko'] = CompressedTextMapper.convert("Pay 20 rupees, open 1 chest. Are you lucky?\nSo, Play game?\n  ≥ play\n    never!\n{CHOICE}")
         text['game_chest_play_yes'] = CompressedTextMapper.convert("Good luck then")
@@ -1929,16 +1679,16 @@ class TextTable(object):
         text['game_chest_lost_woods'] = CompressedTextMapper.convert("Pay 100 rupees open 1 chest. Are you lucky?\nSo, Play game?\n  ≥ play\n    never!\n{CHOICE}")
         text['kakariko_flophouse_man_no_flippers'] = CompressedTextMapper.convert("I really hate mowing my yard.\nI moved my house and everyone else's to avoid it.\n{PAGEBREAK}\nI hope you don't mind.")
         text['kakariko_flophouse_man'] = CompressedTextMapper.convert("I really hate mowing my yard.\nI moved my house and everyone else's to avoid it.\n{PAGEBREAK}\nI hope you don't mind.")
-        text['menu_start_2'] = CompressedTextMapper.convert("{MENU}\n{SPEED0}\n≥@'s house\n Sanctuary\n{CHOICE3}", False)
-        text['menu_start_3'] = CompressedTextMapper.convert("{MENU}\n{SPEED0}\n≥@'s house\n Sanctuary\n Mountain Cave\n{CHOICE2}", False)
-        text['menu_pause'] = CompressedTextMapper.convert("{SPEED0}\n≥continue\n save and quit\n{CHOICE3}", False)
+        text['menu_start_2'] = CompressedTextMapper.convert("{MENU}\n{SPEED0}\n≥ @'s House\n  Sanctuary\n{CHOICE3}", False)
+        text['menu_start_3'] = CompressedTextMapper.convert("{MENU}\n{SPEED0}\n≥ @'s House\n  Sanctuary\n  Mountain Cave\n{CHOICE2}", False)
+        text['menu_pause'] = CompressedTextMapper.convert("{SPEED0}\n≥ Continue\n  Save & Quit\n{CHOICE3}", False)
         text['game_digging_choice'] = CompressedTextMapper.convert("Have 80 Rupees? Want to play digging game?\n  ≥yes\n   no\n{CHOICE}")
         text['game_digging_start'] = CompressedTextMapper.convert("Okay, use the shovel with Y!")
         text['game_digging_no_cash'] = CompressedTextMapper.convert("Shovel rental is 80 rupees.\nI have all day")
         text['game_digging_end_time'] = CompressedTextMapper.convert("Time's up!\nTime for you to go.")
         text['game_digging_come_back_later'] = CompressedTextMapper.convert("Come back later, I have to bury things.")
         text['game_digging_no_follower'] = CompressedTextMapper.convert("Something is following you. I don't like.")
-        text['menu_start_4'] = CompressedTextMapper.convert("{MENU}\n{SPEED0}\n≥@'s house\n Mountain Cave\n{CHOICE3}", False)
+        text['menu_start_4'] = CompressedTextMapper.convert("{MENU}\n{SPEED0}\n≥ @'s House\n  Mountain Cave\n{CHOICE3}", False)
         # Start of new text data
         text['ganon_fall_in_alt'] = CompressedTextMapper.convert("You think you\nare ready to\nface me?\n\nI will not die\n\nunless you\ncomplete your\ngoals. Dingus!")
         text['ganon_phase_3_alt'] = CompressedTextMapper.convert("Got wax in\nyour ears?\nI cannot die!")

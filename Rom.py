@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 JAP10HASH = '03a63945398191337e896e5771f77173'
-RANDOMIZERBASEHASH = '2073e8541963696ebeedad70acf41efd'
+RANDOMIZERBASEHASH = 'd9e42c2fcf94ab714af329bc3bff9d0d'
 
 import io
 import itertools
@@ -2310,7 +2310,7 @@ def write_strings(rom, world, player, team):
         tt['bottle_vendor_choice'] = f"I gots {hint_text(vendor_location.item)}\nYous gots 100 rupees?" \
                                      f"\n  ≥ I want\n    no way!\n{{CHOICE}}"
 
-        tt['sign_north_of_links_house'] = '> Randomizer The telepathic tiles can have hints!'
+        tt['sign_north_of_links_house'] = '~ > Randomizer ~\nTelepathic tiles can have hints!'
         hint_locations = HintLocations.copy()
         local_random.shuffle(hint_locations)
         all_entrances = [entrance for entrance in world.get_entrances() if entrance.player == player]
