@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 JAP10HASH = '03a63945398191337e896e5771f77173'
-RANDOMIZERBASEHASH = 'd9e42c2fcf94ab714af329bc3bff9d0d'
+RANDOMIZERBASEHASH = '4fd3d9572ab10d9df972f8d300ed6ad4'
 
 import io
 import itertools
@@ -2303,12 +2303,12 @@ def write_strings(rom, world, player, team):
     if world.hints[player]:
         # Zora hint
         zora_location = world.get_location("King Zora", player)
-        tt['zora_tells_cost'] = f"You got 500 rupees to buy {hint_text(zora_location.item)}" \
-                                f"\n  ≥ Duh\n    Oh carp\n{{CHOICE}}"
+        tt['zora_tells_cost'] = f"You wanna buy {hint_text(zora_location.item)}?\n{{PAGEBREAK}}\n" \
+                                f"Got 500 rupees?\n  ≥ Duh\n    Oh carp\n{{CHOICE}}"
         # Bottle Vendor hint
         vendor_location = world.get_location("Bottle Merchant", player)
-        tt['bottle_vendor_choice'] = f"I gots {hint_text(vendor_location.item)}\nYous gots 100 rupees?" \
-                                     f"\n  ≥ I want\n    no way!\n{{CHOICE}}"
+        tt['bottle_vendor_choice'] = f"I gots {hint_text(vendor_location.item)}. You want it?\n{{PAGEBREAK}}\n" \
+                                     f"Gots 100 rupees?\n  ≥ I want\n    No way!\n{{CHOICE}}"
 
         tt['sign_north_of_links_house'] = '~ > Randomizer ~\nTelepathic tiles can have hints!'
         hint_locations = HintLocations.copy()
@@ -2329,7 +2329,7 @@ def write_strings(rom, world, player, team):
                 if entrance.name in entrances_to_hint:
                     this_hint = entrances_to_hint[entrance.name] + ' leads to ' + hint_text(
                         entrance.connected_region) + '.'
-                    tt[hint_locations.pop(0)] = this_hint
+                    tt[hint_locations.pop(0)] = this_hint.capitalize()
                     entrances_to_hint = {}
                     break
         # Now we write inconvenient locations for most shuffles and finish taking care of the less chaotic ones.
@@ -2345,7 +2345,7 @@ def write_strings(rom, world, player, team):
                 if hint_count:
                     this_hint = entrances_to_hint[entrance.name] + ' leads to ' + hint_text(
                         entrance.connected_region) + '.'
-                    tt[hint_locations.pop(0)] = this_hint
+                    tt[hint_locations.pop(0)] = this_hint.capitalize()
                     entrances_to_hint.pop(entrance.name)
                     hint_count -= 1
                 else:
@@ -2382,7 +2382,7 @@ def write_strings(rom, world, player, team):
                 if hint_count:
                     this_hint = entrances_to_hint[entrance.name] + ' leads to ' + hint_text(
                         entrance.connected_region) + '.'
-                    tt[hint_locations.pop(0)] = this_hint
+                    tt[hint_locations.pop(0)] = this_hint.capitalize()
                     entrances_to_hint.pop(entrance.name)
                     hint_count -= 1
                 else:
@@ -2446,7 +2446,7 @@ def write_strings(rom, world, player, team):
                 tt[hint_locations.pop(0)] = this_hint
             else:
                 this_hint = location + ' contains ' + hint_text(world.get_location(location, player).item) + '.'
-                tt[hint_locations.pop(0)] = this_hint
+                tt[hint_locations.pop(0)] = this_hint.capitalize()
 
         # Lastly we write hints to show where certain interesting items are. It is done the way it is to re-use the silver code and also to give one hint per each type of item regardless of how many exist. This supports many settings well.
         items_to_hint = RelevantItems.copy()
@@ -2463,7 +2463,7 @@ def write_strings(rom, world, player, team):
             local_random.shuffle(this_location)
             if this_location:
                 this_hint = this_location[0].item.hint_text + ' can be found ' + hint_text(this_location[0]) + '.'
-                tt[hint_locations.pop(0)] = this_hint
+                tt[hint_locations.pop(0)] = this_hint.capitalize()
                 hint_count -= 1
 
         # Adding a hint for the Thieves' Town Attic location in Crossed door shuffle.
@@ -2596,8 +2596,8 @@ def write_strings(rom, world, player, team):
 
     # inverted spawn menu changes
     if world.mode[player] == 'inverted':
-        tt['menu_start_2'] = "{MENU}\n{SPEED0}\n≥@'s house\n Dark Chapel\n{CHOICE3}"
-        tt['menu_start_3'] = "{MENU}\n{SPEED0}\n≥@'s house\n Dark Chapel\n Mountain Cave\n{CHOICE2}"
+        tt['menu_start_2'] = "{MENU}\n{SPEED0}\n≥ @'s House\n  Dark Sanctuary\n{CHOICE3}"
+        tt['menu_start_3'] = "{MENU}\n{SPEED0}\n≥ @'s House\n  Dark Sanctuary\n  Mountain Cave\n{CHOICE2}"
 
     for at, text in world.plando_texts[player].items():
 
