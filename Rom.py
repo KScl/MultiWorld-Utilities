@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 JAP10HASH = '03a63945398191337e896e5771f77173'
-RANDOMIZERBASEHASH = '4fd3d9572ab10d9df972f8d300ed6ad4'
+RANDOMIZERBASEHASH = '202031b49f0821610dd3550bdfece0f9'
 
 import io
 import itertools
@@ -2247,7 +2247,10 @@ def write_strings(rom, world, player, team):
         tt['kakariko_flophouse_man'] = 'I really hate mowing my yard.\n{PAGEBREAK}\nI should move.'
 
     if world.mode[player] == 'inverted':
-        tt['sign_village_of_outcasts'] = 'attention\nferal ducks sighted\nhiding in statues\n\nflute players beware\n'
+        tt['sign_village_of_outcasts'] = '\n  - ATTENTION -\n\nFeral ducks have been sighted hiding in statues\nToot your Flute with caution.\n'
+
+    def capitalize_first(text):
+        return text[0].upper() + text[1:]
 
     def hint_text(dest, special_hint=None):
         if not dest: # Fill in with hints from Nothing
@@ -2315,8 +2318,9 @@ def write_strings(rom, world, player, team):
         local_random.shuffle(hint_locations)
         all_entrances = [entrance for entrance in world.get_entrances() if entrance.player == player]
         local_random.shuffle(all_entrances)
-
+        # ---------------------------------------------------------------------
         # First we take care of the one inconvenient dungeon in the appropriately simple shuffles.
+        # ---------------------------------------------------------------------
         entrances_to_hint = {}
         entrances_to_hint.update(InconvenientDungeonEntrances)
         if world.shuffle_ganon:
@@ -2327,12 +2331,13 @@ def write_strings(rom, world, player, team):
         if world.shuffle[player] in ['simple', 'restricted', 'restricted_legacy']:
             for entrance in all_entrances:
                 if entrance.name in entrances_to_hint:
-                    this_hint = entrances_to_hint[entrance.name] + ' leads to ' + hint_text(
-                        entrance.connected_region) + '.'
-                    tt[hint_locations.pop(0)] = this_hint.capitalize()
+                    this_hint = '%s leads to %s.' % (entrances_to_hint[entrance.name], hint_text(entrance.connected_region))
+                    tt[hint_locations.pop(0)] = capitalize_first(this_hint)
                     entrances_to_hint = {}
                     break
+        # ---------------------------------------------------------------------
         # Now we write inconvenient locations for most shuffles and finish taking care of the less chaotic ones.
+        # ---------------------------------------------------------------------
         entrances_to_hint.update(InconvenientOtherEntrances)
         if world.shuffle[player] in ['vanilla', 'dungeonssimple', 'dungeonsfull']:
             hint_count = 0
@@ -2343,15 +2348,15 @@ def write_strings(rom, world, player, team):
         for entrance in all_entrances:
             if entrance.name in entrances_to_hint:
                 if hint_count:
-                    this_hint = entrances_to_hint[entrance.name] + ' leads to ' + hint_text(
-                        entrance.connected_region) + '.'
-                    tt[hint_locations.pop(0)] = this_hint.capitalize()
+                    this_hint = '%s leads to %s.' % (entrances_to_hint[entrance.name], hint_text(entrance.connected_region))
+                    tt[hint_locations.pop(0)] = capitalize_first(this_hint)
                     entrances_to_hint.pop(entrance.name)
                     hint_count -= 1
                 else:
                     break
-
+        # ---------------------------------------------------------------------
         # Next we handle hints for randomly selected other entrances, curating the selection intelligently based on shuffle.
+        # ---------------------------------------------------------------------
         if world.shuffle[player] not in ['simple', 'restricted', 'restricted_legacy']:
             entrances_to_hint.update(ConnectorEntrances)
             entrances_to_hint.update(DungeonEntrances)
@@ -2380,15 +2385,26 @@ def write_strings(rom, world, player, team):
         for entrance in all_entrances:
             if entrance.name in entrances_to_hint:
                 if hint_count:
-                    this_hint = entrances_to_hint[entrance.name] + ' leads to ' + hint_text(
-                        entrance.connected_region) + '.'
-                    tt[hint_locations.pop(0)] = this_hint.capitalize()
+                    this_hint = '%s leads to %s.' % (entrances_to_hint[entrance.name], hint_text(entrance.connected_region))
+                    tt[hint_locations.pop(0)] = capitalize_first(this_hint)
                     entrances_to_hint.pop(entrance.name)
                     hint_count -= 1
                 else:
                     break
-
+        # ---------------------------------------------------------------------
         # Next we write a few hints for specific inconvenient locations. We don't make many because in entrance this is highly unpredictable.
+        # ---------------------------------------------------------------------
+        location_description = {
+            'Swamp Left': 'The westmost chests in Swamp Palace contain %s.',
+            'Mire Left': 'The westmost chests in Misery Mire contain %s.',
+            'Tower of Hera - Big Key Chest': 'Waiting in the Tower of Hera basement leads to %s.',
+            'Ganons Tower - Big Chest': "The big chest in Ganon's Tower contains %s.",
+            "Thieves' Town - Big Chest": "The big chest in Thieves' Town contains %s.",
+            'Ice Palace - Big Chest': 'The big chest in Ice Palace contains %s.',
+            'Eastern Palace - Big Key Chest': 'The antifairy guarded chest in Eastern Palace contains %s.',
+            'Sahasrahla': 'Sahasrahla seeks a green pendant for %s.',
+            'Graveyard Cave': 'The cave north of the graveyard contains %s.',
+        }
         locations_to_hint = InconvenientLocations.copy()
         if world.doorShuffle[player] != 'crossed':
             locations_to_hint.extend(InconvenientDungeonLocations)
@@ -2399,58 +2415,23 @@ def write_strings(rom, world, player, team):
         hint_count -= 2 if world.doorShuffle[player] == 'crossed' else 0
         for location in locations_to_hint[:hint_count]:
             if location == 'Swamp Left':
-                if local_random.randint(0, 1):
-                    first_item = hint_text(world.get_location('Swamp Palace - West Chest', player).item)
-                    second_item = hint_text(world.get_location('Swamp Palace - Big Key Chest', player).item)
-                else:
-                    second_item = hint_text(world.get_location('Swamp Palace - West Chest', player).item)
-                    first_item = hint_text(world.get_location('Swamp Palace - Big Key Chest', player).item)
-                this_hint = ('The westmost chests in Swamp Palace contain ' + first_item + ' and ' + second_item + '.')
-                tt[hint_locations.pop(0)] = this_hint
+                hinted_items = ['Swamp Palace - West Chest', 'Swamp Palace - Big Key Chest']
+                local_random.shuffle(hinted_items)
             elif location == 'Mire Left':
-                if local_random.randint(0, 1):
-                    first_item = hint_text(world.get_location('Misery Mire - Compass Chest', player).item)
-                    second_item = hint_text(world.get_location('Misery Mire - Big Key Chest', player).item)
-                else:
-                    second_item = hint_text(world.get_location('Misery Mire - Compass Chest', player).item)
-                    first_item = hint_text(world.get_location('Misery Mire - Big Key Chest', player).item)
-                this_hint = ('The westmost chests in Misery Mire contain ' + first_item + ' and ' + second_item + '.')
-                tt[hint_locations.pop(0)] = this_hint
-            elif location == 'Tower of Hera - Big Key Chest':
-                this_hint = 'Waiting in the Tower of Hera basement leads to ' + hint_text(
-                    world.get_location(location, player).item) + '.'
-                tt[hint_locations.pop(0)] = this_hint
-            elif location == 'Ganons Tower - Big Chest':
-                this_hint = 'The big chest in Ganon\'s Tower contains ' + hint_text(
-                    world.get_location(location, player).item) + '.'
-                tt[hint_locations.pop(0)] = this_hint
-            elif location == 'Thieves\' Town - Big Chest':
-                this_hint = 'The big chest in Thieves\' Town contains ' + hint_text(
-                    world.get_location(location, player).item) + '.'
-                tt[hint_locations.pop(0)] = this_hint
-            elif location == 'Ice Palace - Big Chest':
-                this_hint = 'The big chest in Ice Palace contains ' + hint_text(
-                    world.get_location(location, player).item) + '.'
-                tt[hint_locations.pop(0)] = this_hint
-            elif location == 'Eastern Palace - Big Key Chest':
-                this_hint = 'The antifairy guarded chest in Eastern Palace contains ' + hint_text(
-                    world.get_location(location, player).item) + '.'
-                tt[hint_locations.pop(0)] = this_hint
-            elif location == 'Sahasrahla':
-                this_hint = 'Sahasrahla seeks a green pendant for ' + hint_text(
-                    world.get_location(location, player).item) + '.'
-                tt[hint_locations.pop(0)] = this_hint
-            elif location == 'Graveyard Cave':
-                this_hint = 'The cave north of the graveyard contains ' + hint_text(
-                    world.get_location(location, player).item) + '.'
-                tt[hint_locations.pop(0)] = this_hint
+                hinted_items = ['Misery Mire - Compass Chest', 'Misery Mire - Big Key Chest']
+                local_random.shuffle(hinted_items)
             else:
-                this_hint = location + ' contains ' + hint_text(world.get_location(location, player).item) + '.'
-                tt[hint_locations.pop(0)] = this_hint.capitalize()
-
-        # Lastly we write hints to show where certain interesting items are. It is done the way it is to re-use the silver code and also to give one hint per each type of item regardless of how many exist. This supports many settings well.
+                hinted_items = [location]
+            this_hint = location_description.get(location, f'{location} contains %s.') % \
+                ' and '.join([hint_text(world.get_location(location, player).item) for location in hinted_items])
+            tt[hint_locations.pop(0)] = capitalize_first(this_hint)
+        # ---------------------------------------------------------------------
+        # Lastly we write hints to show where certain interesting items are.
+        # It is done the way it is to re-use the silver code and also to give one hint per each type of item regardless of how many exist.
+        # This supports many settings well.
+        # ---------------------------------------------------------------------
         items_to_hint = RelevantItems.copy()
-        if world.keyshuffle[player]:
+        if world.keyshuffle[player] and world.keyshuffle[player] != "universal":
             items_to_hint.extend(SmallKeys)
         if world.bigkeyshuffle[player]:
             items_to_hint.extend(BigKeys)
@@ -2459,27 +2440,31 @@ def write_strings(rom, world, player, team):
         hint_count += 2 if world.doorShuffle[player] == 'crossed' else 0
         while hint_count > 0 and items_to_hint:
             this_item = items_to_hint.pop(0)
-            this_location = world.find_items(this_item, player)
+            # Exclude locked locations; most commonly, key drops outside of keydropshuffle.
+            this_location = [location for location in world.find_items(this_item, player) if not location.locked]
             local_random.shuffle(this_location)
             if this_location:
-                this_hint = this_location[0].item.hint_text + ' can be found ' + hint_text(this_location[0]) + '.'
-                tt[hint_locations.pop(0)] = this_hint.capitalize()
+                this_hint = '%s can be found %s.' % (this_location[0].item.hint_text, hint_text(this_location[0]))
+                tt[hint_locations.pop(0)] = capitalize_first(this_hint)
                 hint_count -= 1
-
+        # ---------------------------------------------------------------------
         # Adding a hint for the Thieves' Town Attic location in Crossed door shuffle.
+        # ---------------------------------------------------------------------
         if world.doorShuffle[player] in ['crossed']:
             attic_hint = world.get_location("Thieves' Town - Attic", player).parent_region.dungeon.name
             this_hint = 'A cracked floor can be found in ' + attic_hint + '.'
             if hint_locations[0] == 'telepathic_tile_thieves_town_upstairs':
-                tt[hint_locations.pop(1)] = this_hint
+                tt[hint_locations.pop(1)] = capitalize_first(this_hint)
             else:
-                tt[hint_locations.pop(0)] = this_hint
-
+                tt[hint_locations.pop(0)] = capitalize_first(this_hint)
+        # ---------------------------------------------------------------------
         # All remaining hint slots are filled with junk hints. It is done this way to ensure the same junk hint isn't selected twice.
+        # ---------------------------------------------------------------------
         junk_hints = junk_texts.copy()
         local_random.shuffle(junk_hints)
         for location, text in zip(hint_locations, junk_hints):
             tt[location] = text
+        # ---------------------------------------------------------------------
 
     # We still need the older hints of course. Those are done here.
 
@@ -2513,31 +2498,106 @@ def write_strings(rom, world, player, team):
     greenpendant = world.find_items('Green Pendant', player)[0]
     tt['sahasrahla_bring_courage'] = 'I lost my family heirloom in %s' % greenpendant.hint_text
 
-    if world.crystals_needed_for_gt[player] == 1:
+    if world.crystals_needed_for_gt[player] == 0:
+        tt['sign_ganons_tower'] = "The door's open, come on in"
+    elif world.crystals_needed_for_gt[player] == 1:
         tt['sign_ganons_tower'] = 'You need 1 crystal to enter.'
     else:
-        tt['sign_ganons_tower'] = f'You need {world.crystals_needed_for_gt[player]} crystals to enter.'
+        tt['sign_ganons_tower'] = 'You need %d crystals to enter.' % world.crystals_needed_for_gt[player]
 
-    if world.goal[player] == 'dungeons':
-        tt['sign_ganon'] = 'You need to complete all the dungeons.'
+    # -------------------------------------------------------------------------
+    # Goal section
+    # -------------------------------------------------------------------------
+    if world.goal[player] == 'pedestal':
+        tt['sign_ganon'] = 'You need to get to the pedestal… Ganon is invincible!'
+    elif world.goal[player] == "icerodhunt":
+        tt['sign_ganon'] = 'Find the Ice Rod and kill Trinexx… Ganon is invincible!'
+    elif world.goal[player] in ['triforcehunt', 'localtriforcehunt']:
+        if world.goal[player] == 'localtriforcehunt' or world.players == 1:
+            tt['sign_ganon'] = 'Gather up the Triforce pieces… Ganon is invincible!'
+        else:
+            tt['sign_ganon'] = 'Gather up the Triforce pieces with everyone… Ganon is invincible!'
+    elif world.goal[player] in ['ganontriforcehunt', 'localganontriforcehunt']:
+        piece_count = '1 Triforce piece' if world.treasure_hunt_count[player] == 1 else '%d Triforce pieces' % world.treasure_hunt_count[player]
+        if world.goal[player] == 'localtriforcehunt' or world.players == 1:
+            tt['sign_ganon'] = 'You need to find %s out of %d to defeat Ganon.' % \
+                (piece_count, world.triforce_pieces_available[player])
+        else:
+            tt['sign_ganon'] = 'You need to find %s out of %d with everyone to defeat Ganon.' % \
+                (piece_count, world.triforce_pieces_available[player])
+    elif world.goal[player] == 'dungeons':
+        tt['sign_ganon'] = 'You need to complete all the dungeons to defeat Ganon.'
     elif world.goal[player] == 'ganonpedestal':
         tt['sign_ganon'] = 'You need to pull the pedestal to defeat Ganon.'
     elif world.goal[player] == "ganon":
-        if world.crystals_needed_for_ganon[player] == 1:
-            tt['sign_ganon'] = 'You need 1 crystal to beat Ganon and have beaten Agahnim atop Ganons Tower.'
+        if world.crystals_needed_for_ganon[player] == 0:
+            tt['sign_ganon'] = "You need to complete Ganon's Tower to defeat Ganon."
+        elif world.crystals_needed_for_ganon[player] == 1:
+            tt['sign_ganon'] = "You need 1 crystal, and to complete Ganon's Tower to defeat Ganon."
         else:
-            tt['sign_ganon'] = f'You need {world.crystals_needed_for_ganon[player]} crystals to beat Ganon and ' \
-                               f'have beaten Agahnim atop Ganons Tower'
-    elif world.goal[player] == "icerodhunt":
-        tt['sign_ganon'] = 'Go find the Ice Rod and Kill Trinexx... Ganon is invincible!'
-        tt['ganon_fall_in_alt'] = 'Why are you even here?\n You can\'t even hurt me! Go kill Trinexx instead.'
-        tt['ganon_phase_3_alt'] = 'Seriously? Go Away, I will not Die.'
-    else:
-        if world.crystals_needed_for_ganon[player] == 1:
+            tt['sign_ganon'] = "You need %d crystals, and to complete Ganon's Tower to defeat Ganon." % \
+                world.crystals_needed_for_ganon[player]
+    elif world.goal[player] == 'crystals':
+        if world.crystals_needed_for_ganon[player] == 0:
+            tt['sign_ganon'] = 'You can beat Ganon at any time.'
+        elif world.crystals_needed_for_ganon[player] == 1:
             tt['sign_ganon'] = 'You need 1 crystal to beat Ganon.'
         else:
-            tt['sign_ganon'] = f'You need {world.crystals_needed_for_ganon[player]} crystals to beat Ganon.'
+            tt['sign_ganon'] = 'You need %d crystals to beat Ganon.' % \
+                world.crystals_needed_for_ganon[player]
+    else:
+        raise ValueError(f'Unknown goal: "{world.goal[player]}"')
+    # -------------------------------------------------------------------------
+    # Extra goal texts
+    # -------------------------------------------------------------------------
+    ganon_not_goal = 'Stop pestering me and go finish your actual goal!'
+    ganon_is_goal = "Got wax in your ears? Go finish your goal!\nUntil you've done that, I cannot die!"
 
+    if world.goal[player] == 'pedestal':
+        tt['ganon_fall_in_alt'] = "Why are you here? You can't even hurt me!\nYour goal is at the pedestal.\n"
+        tt['ganon_phase_3_alt'] = ganon_not_goal
+    elif world.goal[player] == "icerodhunt":
+        tt['ganon_fall_in_alt'] = "Why are you here? You can't even hurt me!\nGo kill Trinexx instead.\n"
+        tt['ganon_phase_3_alt'] = ganon_not_goal
+    elif world.goal[player] in ['triforcehunt', 'localtriforcehunt']:
+        murahdahla = "Hello @.\nI am Murahdahla, brother of Sahasrahla and Aginah.\n\nBehold, the power of invisibility!" \
+            "\n\n\n…\n\n" \
+            "Wait, you can see me, can't you?\n\nI knew I should have hidden in a hollow tree…\n"
+        if world.triforce_pieces_available[player] == 1:
+            murahdahla += '{PAGEBREAK}\nThe Triforce was shattered into\n1 piece.\n'
+        else:
+            murahdahla += '{PAGEBREAK}\nThe Triforce was shattered into \n%d pieces.\n' % world.triforce_pieces_available[player]
+        if world.treasure_hunt_count[player] == world.triforce_pieces_available[player]:
+            murahdahla += "Bring all of them\nback to me, and I\ncan restore it."
+        elif world.treasure_hunt_count[player] == 1:
+            murahdahla += "Bring me back\n1 piece, and I\ncan restore it."
+        else:
+            murahdahla += "Bring me back\n%d pieces, and I\ncan restore it." % world.treasure_hunt_count[player]
+
+        tt['ganon_fall_in_alt'] = "Why are you here? You can't even hurt me!\nGo find the Triforce pieces instead."
+        tt['ganon_phase_3_alt'] = ganon_not_goal
+        tt['murahdahla'] = murahdahla
+    elif world.goal[player] in ['ganontriforcehunt', 'localganontriforcehunt']:
+        tt['ganon_fall_in_alt'] = "Aren't you here\na bit early?\n\nI've hidden the Triforce pieces well.\nWithout them, you cannot defeat me!\n"
+        tt['ganon_phase_3_alt'] = ganon_is_goal
+    elif world.goal[player] == 'dungeons':
+        tt['ganon_fall_in_alt'] = "Aren't you here\na bit early?\n\nAs long as you've left a dungeon incomplete,\nyou have no hope of defeating me!\n"
+        tt['ganon_phase_3_alt'] = ganon_is_goal
+    elif world.goal[player] == 'ganonpedestal':
+        tt['ganon_fall_in_alt'] = "Aren't you here\na bit early?\n\nThe seal on the pedestal has yet to be broken.\nAs long as it persists, you cannot defeat me!"
+        tt['ganon_phase_3_alt'] = ganon_is_goal
+    elif world.goal[player] == 'ganon':
+        tt['ganon_fall_in_alt'] = "Aren't you here\na bit early?\n\nI have no tolerance for sequence breaks!\nFinish my tower and collect the crystals first!"
+        tt['ganon_phase_3_alt'] = ganon_is_goal
+    elif world.goal[player] == 'crystals':
+        tt['ganon_fall_in_alt'] = "Aren't you here\na bit early?\n\nAs long as you lack the power of the crystals,\nyou lack the ability to\ndefeat me, too!"
+        tt['ganon_phase_3_alt'] = ganon_is_goal
+    else:
+        raise ValueError(f'Unknown goal: "{world.goal[player]}"')
+    # -------------------------------------------------------------------------
+
+
+    tt['ganon_fall_in'] = Ganon1_texts[local_random.randint(0, len(Ganon1_texts) - 1)]
     tt['uncle_leaving_text'] = Uncle_texts[local_random.randint(0, len(Uncle_texts) - 1)]
     tt['end_triforce'] = "{NOBORDER}\n" + Triforce_texts[local_random.randint(0, len(Triforce_texts) - 1)]
     tt['bomb_shop_big_bomb'] = BombShop2_texts[local_random.randint(0, len(BombShop2_texts) - 1)]
@@ -2545,46 +2605,6 @@ def write_strings(rom, world, player, team):
     # this is what shows after getting the green pendant item in rando
     tt['sahasrahla_quest_have_master_sword'] = Sahasrahla2_texts[local_random.randint(0, len(Sahasrahla2_texts) - 1)]
     tt['blind_by_the_light'] = Blind_texts[local_random.randint(0, len(Blind_texts) - 1)]
-
-    if world.goal[player] in ['triforcehunt', 'localtriforcehunt']:
-        tt['ganon_fall_in_alt'] = 'Why are you even here?\n You can\'t even hurt me! Get the Triforce Pieces.'
-        tt['ganon_phase_3_alt'] = 'Seriously? Go Away, I will not Die.'
-        if world.goal[player] == 'triforcehunt' and world.players > 1:
-            tt['sign_ganon'] = 'Go find the Triforce pieces with your friends... Ganon is invincible!'
-        else:
-            tt['sign_ganon'] = 'Go find the Triforce pieces... Ganon is invincible!'
-        if world.treasure_hunt_count[player] > 1:
-            tt['murahdahla'] = "Hello @. I\nam Murahdahla, brother of\nSahasrahla and Aginah. Behold the power of\n" \
-                               "invisibility.\n\n\n\n… … …\n\nWait! you can see me? I knew I should have\n" \
-                               "hidden in  a hollow tree. If you bring\n%d triforce pieces out of %d, I can reassemble it." % \
-                               (world.treasure_hunt_count[player], world.triforce_pieces_available[player])
-        else:
-            tt['murahdahla'] = "Hello @. I\nam Murahdahla, brother of\nSahasrahla and Aginah. Behold the power of\n" \
-                               "invisibility.\n\n\n\n… … …\n\nWait! you can see me? I knew I should have\n" \
-                               "hidden in  a hollow tree. If you bring\n%d triforce piece out of %d, I can reassemble it." % \
-                               (world.treasure_hunt_count[player], world.triforce_pieces_available[player])
-    elif world.goal[player] in ['pedestal']:
-        tt['ganon_fall_in_alt'] = 'Why are you even here?\n You can\'t even hurt me! Your goal is at the pedestal.'
-        tt['ganon_phase_3_alt'] = 'Seriously? Go Away, I will not Die.'
-        tt['sign_ganon'] = 'You need to get to the pedestal... Ganon is invincible!'
-    else:
-        tt['ganon_fall_in'] = Ganon1_texts[local_random.randint(0, len(Ganon1_texts) - 1)]
-        tt['ganon_fall_in_alt'] = 'You cannot defeat me until you finish your goal!'
-        tt['ganon_phase_3_alt'] = 'Got wax in\nyour ears?\nI can not die!'
-        if world.treasure_hunt_count[player] > 1:
-            if world.goal[player] == 'ganontriforcehunt' and world.players > 1:
-                tt['sign_ganon'] = 'You need to find %d Triforce pieces out of %d with your friends to defeat Ganon.' % \
-                                   (world.treasure_hunt_count[player], world.triforce_pieces_available[player])
-            elif world.goal[player] in ['ganontriforcehunt', 'localganontriforcehunt']:
-                tt['sign_ganon'] = 'You need to find %d Triforce pieces out of %d to defeat Ganon.' % \
-                                   (world.treasure_hunt_count[player], world.triforce_pieces_available[player])
-        else:
-            if world.goal[player] == 'ganontriforcehunt' and world.players > 1:
-                tt['sign_ganon'] = 'You need to find %d Triforce piece out of %d with your friends to defeat Ganon.' % \
-                                   (world.treasure_hunt_count[player], world.triforce_pieces_available[player])
-            elif world.goal[player] in ['ganontriforcehunt', 'localganontriforcehunt']:
-                tt['sign_ganon'] = 'You need to find %d Triforce piece out of %d to defeat Ganon.' % \
-                                   (world.treasure_hunt_count[player], world.triforce_pieces_available[player])
 
     tt['kakariko_tavern_fisherman'] = TavernMan_texts[local_random.randint(0, len(TavernMan_texts) - 1)]
 
