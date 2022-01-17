@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 JAP10HASH = '03a63945398191337e896e5771f77173'
-RANDOMIZERBASEHASH = '202031b49f0821610dd3550bdfece0f9'
+RANDOMIZERBASEHASH = '1355bd5ded305552a4e31eb604640f14'
 
 import io
 import itertools
@@ -874,6 +874,8 @@ def patch_rom(world, rom, player, team, enemized, is_mystery=False):
         dr_flags |= DROptions.Rails
     if world.standardize_palettes[player] == 'original':
         dr_flags |= DROptions.OriginalPalettes
+    if world.experimental[player]:
+        dr_flags |= DROptions.DarkWorld_Spawns
 
 
     # fix hc big key problems (map and compass too)
@@ -883,6 +885,25 @@ def patch_rom(world, rom, player, team, enemized, is_mystery=False):
         sanctuary = world.get_region('Sanctuary', player)
         rom.write_byte(0x1597b, sanctuary.dungeon.dungeon_id*2)
         update_compasses(rom, world, player)
+
+    # Bunny spawn from menu
+    def should_be_bunny(region, mode):
+        if mode != 'inverted':
+            return region.is_dark_world and not region.is_light_world
+        else:
+            return region.is_light_world and not region.is_dark_world
+
+    # Link's House spawn (disabled, always spawn as Link)
+    #rom.write_bytes(0x13fff0, [0x04, 0x01])
+
+    # dark world spawns
+    sanc_region = world.get_region('Sanctuary', player)
+    if should_be_bunny(sanc_region, world.mode[player]):
+        rom.write_bytes(0x13fff2, [0x12, 0x00])
+
+    old_man_house = world.get_region('Old Man House', player)
+    if should_be_bunny(old_man_house, world.mode[player]):
+        rom.write_bytes(0x13fff4, [0xe4, 0x00])
 
     # patch doors
     if world.doorShuffle[player] == 'crossed':
@@ -903,9 +924,10 @@ def patch_rom(world, rom, player, team, enemized, is_mystery=False):
             rom.write_byte(0x13f040+offset*2, bk_status)
         if player in world.sanc_portal.keys():
             rom.write_byte(0x159a6, world.sanc_portal[player].ent_offset)
-            sanc_region = world.sanc_portal[player].door.entrance.parent_region
-            if sanc_region.is_dark_world and not sanc_region.is_light_world:
-                rom.write_byte(0x13ff00, 1)
+            # Old check, no longer relevant
+            #sanc_region = world.sanc_portal[player].door.entrance.parent_region
+            #if sanc_region.is_dark_world and not sanc_region.is_light_world:
+            #    rom.write_byte(0x13ff00, 1)
         for room in world.rooms:
             if room.player == player and room.palette is not None:
                 rom.write_byte(0x13f200+room.index, room.palette)
@@ -1625,7 +1647,11 @@ def patch_rom(world, rom, player, team, enemized, is_mystery=False):
     # s - enabled for inside small keys
     # block HC upstairs doors in rain state in standard mode
     prevent_rain = world.mode[player] == "standard" and world.shuffle[player] != 'vanilla'
-    rom.write_byte(0x18008A, 0x01 if prevent_rain else 0x00)
+    if prevent_rain and world.doorShuffle[player] == 'vanilla':
+        rom.write_byte(0x18008A, 0x02) # Let baserom handle it (rail off entrances)
+    else:
+        rom.write_byte(0x18008A, 0x01 if prevent_rain else 0x00)
+
     # block sanc door in rain state and the dungeon is not vanilla
     rom.write_byte(0x13f0fa, 0x01 if world.mode[player] == "standard" and world.doorShuffle[player] != 'vanilla' else 0x00)
 
@@ -2451,12 +2477,25 @@ def write_strings(rom, world, player, team):
         # Adding a hint for the Thieves' Town Attic location in Crossed door shuffle.
         # ---------------------------------------------------------------------
         if world.doorShuffle[player] in ['crossed']:
-            attic_hint = world.get_location("Thieves' Town - Attic", player).parent_region.dungeon.name
-            this_hint = 'A cracked floor can be found in ' + attic_hint + '.'
-            if hint_locations[0] == 'telepathic_tile_thieves_town_upstairs':
+            attic_dungeon = world.get_location("Thieves' Town - Attic", player).parent_region.dungeon.name
+            attic_hint = { # Make dungeon name pretty
+                'Agahnims Tower': "Agahnim's Tower",
+                'Thieves Town': "Thieves' Town",
+                'Ganons Tower': "Ganon's Tower"
+            }.get(attic_dungeon, attic_dungeon)
+            this_hint = 'A cracked floor can be found in %s.' % attic_hint
+            if world.intensity[player] < 2 and hint_locations[0] == 'telepathic_tile_thieves_town_upstairs':
                 tt[hint_locations.pop(1)] = capitalize_first(this_hint)
             else:
                 tt[hint_locations.pop(0)] = capitalize_first(this_hint)
+            # DR adds a text box for taking Blind to her room without the light
+            # see tagalog.asm tables at 957,967 or Follower_HandleTrigger in JPDASM
+            # also the baserom table at org $09A4C2 in hooks.asm (Escort text)
+            tt['blind_not_that_way'] = "I don't like visiting %s,\nit's too bright there." % attic_hint
+            rom.write_byte(0x04a4be, 0xac)  # change the room to blind's room
+            rom.write_byte(0x04a526, 0xb8)  # y coordinate, shifted down
+            rom.write_byte(0x04a529, 0x19)  # x tile shifted right a few tiles
+            rom.write_byte(0x04a52e, 0x06)  # follower set to blind maiden
         # ---------------------------------------------------------------------
         # All remaining hint slots are filled with junk hints. It is done this way to ensure the same junk hint isn't selected twice.
         # ---------------------------------------------------------------------

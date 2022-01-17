@@ -776,8 +776,32 @@ def get_pool_core(world, player: int):
             pool.extend([item_to_place] * world.random.randint(1, 10))
 
         if mode == 'standard' and world.doorShuffle[player] == 'vanilla':
-            key_location = world.random.choice(['Secret Passage', 'Hyrule Castle - Boomerang Chest', 'Hyrule Castle - Map Chest', 'Hyrule Castle - Zelda\'s Chest', 'Sewers - Dark Cross'])
-            place_item(key_location, item_to_place)
+            if world.keydropshuffle[player]: # Need 4 (!) keys to finish escape
+                key_1_location = ["Link's House", 'Secret Passage', 'Hyrule Castle - Boomerang Chest', 'Hyrule Castle - Boomerang Guard Key Drop']
+                key_2_location = key_1_location + ['Hyrule Castle - Map Chest', 'Hyrule Castle - Map Guard Key Drop']
+                key_3_location = key_2_location + ["Hyrule Castle - Zelda's Chest", 'Hyrule Castle - Big Key Drop', 'Sewers - Dark Cross']
+                key_4_location = key_3_location + ['Hyrule Castle - Key Rat Key Drop']
+
+                place_key = world.random.choice(key_1_location)
+                key_2_location.remove(place_key)
+                key_3_location.remove(place_key)
+                key_4_location.remove(place_key)
+                place_item(place_key, item_to_place)
+
+                place_key = world.random.choice(key_2_location)
+                key_3_location.remove(place_key)
+                key_4_location.remove(place_key)
+                place_item(place_key, item_to_place)
+
+                place_key = world.random.choice(key_3_location)
+                key_4_location.remove(place_key)
+                place_item(place_key, item_to_place)
+
+                place_key = world.random.choice(key_4_location)
+                place_item(place_key, item_to_place)
+            else: # Need 1 key to finish escape
+                key_location = world.random.choice(['Secret Passage', 'Hyrule Castle - Boomerang Chest', 'Hyrule Castle - Map Chest', 'Hyrule Castle - Zelda\'s Chest', 'Sewers - Dark Cross'])
+                place_item(key_location, item_to_place)
         else:
             pool.extend([item_to_place])
 
