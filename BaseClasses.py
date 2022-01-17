@@ -152,7 +152,6 @@ class World(object):
             set_player_attr('red_clock_time', -2)
             set_player_attr('blue_clock_time', 2)
             set_player_attr('green_clock_time', 4)
-            set_player_attr('rupoor_cost', 10)
             set_player_attr('can_take_damage', True)
             set_player_attr('glitch_boots', True)
             set_player_attr('progression_balancing', True)
@@ -173,6 +172,10 @@ class World(object):
             set_player_attr('plando_connections', [])
             set_player_attr('potshuffle', False)
             set_player_attr('pot_contents', None)
+            set_player_attr('rupee_limit', 9999)
+            set_player_attr('rupoor_cost', 10)
+            set_player_attr('zora_cost', 500)
+            set_player_attr('bottle_merchant_cost', 100)
 
             set_player_attr('keydropshuffle', False)
             set_player_attr('mixed_travel', 'prevent')

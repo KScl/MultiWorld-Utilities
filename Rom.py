@@ -1127,8 +1127,6 @@ def patch_rom(world, rom, player, team, enemized, is_mystery=False):
         # Disable catching fairies
         rom.write_byte(0x34FD6, 0x80)
         overflow_replacement = GREEN_TWENTY_RUPEES
-        # Rupoor negative value
-        rom.write_int16(0x180036, world.rupoor_cost[player])
         # Set stun items
         rom.write_byte(0x180180, 0x02)  # Hookshot only
     elif world.item_functionality[player] == 'expert':
@@ -1147,8 +1145,6 @@ def patch_rom(world, rom, player, team, enemized, is_mystery=False):
         # Disable catching fairies
         rom.write_byte(0x34FD6, 0x80)
         overflow_replacement = GREEN_TWENTY_RUPEES
-        # Rupoor negative value
-        rom.write_int16(0x180036, world.rupoor_cost[player])
         # Set stun items
         rom.write_byte(0x180180, 0x00)  # Nothing
     else:
@@ -1166,8 +1162,6 @@ def patch_rom(world, rom, player, team, enemized, is_mystery=False):
         rom.write_byte(0x18004F, 0x01)
         # Enable catching fairies
         rom.write_byte(0x34FD6, 0xF0)
-        # Rupoor negative value
-        rom.write_int16(0x180036, world.rupoor_cost[player])
         # Set stun items
         rom.write_byte(0x180180, 0x03)  # All standard items
         # Set overflow items for progressive equipment
@@ -1178,6 +1172,14 @@ def patch_rom(world, rom, player, team, enemized, is_mystery=False):
 
     # Byrna residual magic cost
     rom.write_bytes(0x45C42, [0x04, 0x02, 0x01])
+
+    # Monetary costs/etc.
+    rom.write_int16(0x180036, world.rupoor_cost[player])
+    rom.write_int16(0x6DBEC, world.rupee_limit[player] + 1)
+    rom.write_int16(0x6DBF1, world.rupee_limit[player])
+    rom.write_int16(0x29A9A, world.zora_cost[player])
+    rom.write_int16(0x2EAF9, world.bottle_merchant_cost[player])
+    rom.write_int16(0x2EB34, world.bottle_merchant_cost[player])
 
     difficulty = world.difficulty_requirements[player]
 
@@ -1432,6 +1434,7 @@ def patch_rom(world, rom, player, team, enemized, is_mystery=False):
     equip[0x379] = 0x68
     starting_max_bombs = 10
     starting_max_arrows = 30
+    starting_rupee_count = 0
 
     startingstate = CollectionState(world)
 
@@ -1559,12 +1562,7 @@ def patch_rom(world, rom, player, team, enemized, is_mystery=False):
                 equip[0x35C + equip[0x34F]] = bottles[item.name]
                 equip[0x34F] += 1
         elif item.name in rupees:
-            equip[0x360:0x362] = list(
-                min(equip[0x360] + (equip[0x361] << 8) + rupees[item.name], 9999).to_bytes(2, byteorder='little',
-                                                                                           signed=False))
-            equip[0x362:0x364] = list(
-                min(equip[0x362] + (equip[0x363] << 8) + rupees[item.name], 9999).to_bytes(2, byteorder='little',
-                                                                                           signed=False))
+            starting_rupee_count = min(starting_rupee_count + rupees[item.name], world.rupee_limit[player])
         elif item.name in bomb_caps:
             starting_max_bombs = min(starting_max_bombs + bomb_caps[item.name], 50)
         elif item.name in arrow_caps:
@@ -1585,6 +1583,10 @@ def patch_rom(world, rom, player, team, enemized, is_mystery=False):
                 equip[0x36D] = min(equip[0x36D] + 0x08, 0xA0)
         else:
             raise RuntimeError(f'Unsupported item in starting equipment: {item.name}')
+
+
+    equip[0x360:0x362] = list(starting_rupee_count.to_bytes(2, byteorder='little',signed=False))
+    equip[0x362:0x364] = list(starting_rupee_count.to_bytes(2, byteorder='little',signed=False))
 
     equip[0x343] = min(equip[0x343], starting_max_bombs)
     rom.write_byte(0x180034, starting_max_bombs)
@@ -2333,11 +2335,11 @@ def write_strings(rom, world, player, team):
         # Zora hint
         zora_location = world.get_location("King Zora", player)
         tt['zora_tells_cost'] = f"You wanna buy {hint_text(zora_location.item)}?\n{{PAGEBREAK}}\n" \
-                                f"Got 500 rupees?\n  ≥ Duh\n    Oh carp\n{{CHOICE}}"
+                                f"Got {world.zora_cost[player]} rupees?\n  ≥ Duh\n    Oh carp\n{{CHOICE}}"
         # Bottle Vendor hint
         vendor_location = world.get_location("Bottle Merchant", player)
         tt['bottle_vendor_choice'] = f"I gots {hint_text(vendor_location.item)}. You want it?\n{{PAGEBREAK}}\n" \
-                                     f"Gots 100 rupees?\n  ≥ I want\n    No way!\n{{CHOICE}}"
+                                     f"Gots {world.bottle_merchant_cost[player]} rupees?\n  ≥ I want\n    No way!\n{{CHOICE}}"
 
         tt['sign_north_of_links_house'] = '~ > Randomizer ~\nTelepathic tiles can have hints!'
         hint_locations = HintLocations.copy()

@@ -229,8 +229,11 @@ def ShopSlotFill(world):
                         price = world.random.randrange(4, 28)
                     else:
                         price = world.random.randrange(8, 56)
+                    price *= 5
+                    if price > world.rupee_limit[player] # unlikely failsafe
+                        price = world.rupee_limit[player]
 
-                    shop.push_inventory(int(location.name[-1]) - 1, item_name, price * 5, 1,
+                    shop.push_inventory(int(location.name[-1]) - 1, item_name, price, 1,
                                         location.item.player if location.item.player != location.player else 0)
 
 
