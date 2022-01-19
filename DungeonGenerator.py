@@ -1249,7 +1249,6 @@ def create_dungeon_builders(all_sectors, connections_tuple, world, player,
                 for r_name in ['Hyrule Dungeon Cellblock', 'Sanctuary']:  # need to deliver zelda
                     assign_sector(find_sector(r_name, candidate_sectors), current_dungeon,
                                   candidate_sectors, global_pole)
-                standard_stair_check(world, dungeon_map, current_dungeon, candidate_sectors, global_pole)
         entrances_map, potentials, connections = connections_tuple
         accessible_sectors, reverse_d_map = set(), {}
         for key in dungeon_entrances.keys():
@@ -1265,6 +1264,9 @@ def create_dungeon_builders(all_sectors, connections_tuple, world, player,
                     if not sector:
                         sector = find_sector(r_name, all_sectors)
                     reverse_d_map[sector] = key
+        if world.mode[player] == 'standard':
+            current_dungeon = dungeon_map['Hyrule Castle']
+            standard_stair_check(world, dungeon_map, current_dungeon, candidate_sectors, global_pole)
 
         complete_dungeons = {x: y for x, y in dungeon_map.items() if sum(len(sector.outstanding_doors) for sector in y.sectors) <= 0}
         [dungeon_map.pop(key) for key in complete_dungeons.keys()]
@@ -1430,7 +1432,8 @@ def calc_allowance_and_dead_ends(builder, connections_tuple, world, player):
                 check_list = list(potentials[enabling_region])
                 if enabling_region.name in ['Desert Ledge', 'Desert Palace Entrance (North) Spot']:
                     alternate = 'Desert Palace Entrance (North) Spot' if enabling_region.name == 'Desert Ledge' else 'Desert Ledge'
-                    check_list.extend(potentials[world.get_region(alternate, player)])
+                    if world.get_region(alternate, player) in potentials:
+                        check_list.extend(potentials[world.get_region(alternate, player)])
                 connecting_entrances = [x for x in check_list if x != entrance and x not in dead_entrances and x not in drop_entrances_allowance]
                 connect_able = len(connecting_entrances) > 0
             if is_destination and sector.branches() == 0:  #
