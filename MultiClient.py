@@ -1378,7 +1378,7 @@ async def run_game(romfile):
                          stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
-async def websocket_server(websocket: websockets.WebSocketServerProtocol, path, ctx: Context):
+async def websocket_server(websocket: websockets.WebSocketServerProtocol, path: str = '/', ctx: Context = None):
     endpoint = Endpoint(websocket)
     ctx.ui_node.endpoints.append(endpoint)
     process_command = ClientCommandProcessor(ctx)
