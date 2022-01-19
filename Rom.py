@@ -841,7 +841,7 @@ def patch_rom(world, rom, player, team, enemized, is_mystery=False):
                         rom.write_int16(0x15DB5 + 2 * offset, 0x0640)
                     elif room_id == 0x00d6 and world.fix_trock_exit[player]:
                         rom.write_int16(0x15DB5 + 2 * offset, 0x0134)
-                    elif room_id == 0x000c and world.fix_gtower_exit:  # fix ganons tower exit point
+                    elif room_id == 0x000c and world.fix_gtower_exit[player]:  # fix ganons tower exit point
                         rom.write_int16(0x15DB5 + 2 * offset, 0x00A4)
                     else:
                         rom.write_int16(0x15DB5 + 2 * offset, link_y)
@@ -1616,9 +1616,6 @@ def patch_rom(world, rom, player, team, enemized, is_mystery=False):
         rom.write_bytes(0x180080,
                         [50, 50, 70, 70])  # values to fill for Capacity Upgrades (Bomb5, Bomb10, Arrow5, Arrow10)
 
-    if world.mode[player] == 'standard' and world.doorShuffle[player] == 'crossed':
-        world.escape_assist[player].append('bombs')
-
     rom.write_byte(0x18004D, ((0x01 if 'arrows' in world.escape_assist[player] else 0x00) |
                               (0x02 if 'bombs' in world.escape_assist[player] else 0x00) |
                               (0x04 if 'magic' in world.escape_assist[player] else 0x00)))  # Escape assist
@@ -1778,7 +1775,8 @@ def patch_rom(world, rom, player, team, enemized, is_mystery=False):
                 magic_max, magic_small, uncle_refill = 0x80, 0x20, 4
         if world.doorShuffle[player] == 'crossed':
             # Uncle respawn refills (magic, bombs, arrows)
-            rom.write_byte(0x18004E, uncle_refill | (8 if world.keyshuffle[player] == "universal" else 0))
+            # Always refill bombs a bit in crossed
+            rom.write_byte(0x18004E, 2 | uncle_refill | (8 if world.keyshuffle[player] == "universal" else 0))
             rom.write_bytes(0x180185, [max(0x20, magic_max), max(3, bomb_max), max(10, bow_max)])
             rom.write_bytes(0x180188, [0x20, 3, 10])  # Zelda respawn refills (magic, bombs, arrows)
             rom.write_bytes(0x18018B, [0x20, 3, 10])  # Mantle respawn refills (magic, bombs, arrows)

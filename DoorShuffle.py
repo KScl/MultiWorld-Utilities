@@ -65,7 +65,7 @@ def link_doors_main(world, player):
         for entrance, ext in ladders:
             connect_two_way(world, entrance, ext, player)
 
-    if world.intensity[player] < 3 or world.doorShuffle == 'vanilla':
+    if world.intensity[player] < 3 or world.doorShuffle[player] == 'vanilla':
         mirror_route = world.get_entrance('Sanctuary Mirror Route', player)
         mr_door = mirror_route.door
         sanctuary = mirror_route.parent_region

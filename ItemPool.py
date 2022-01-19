@@ -442,6 +442,15 @@ def generate_itempool(world, player: int):
             pool.remove(starting_weapon)
         if placed_items["Link's Uncle"] in ['Bow', 'Progressive Bow', 'Bombs (10)', 'Cane of Somaria', 'Cane of Byrna'] and world.enemy_health[player] not in ['default', 'easy']:
             world.escape_assist[player].append('bombs')
+        if world.doorShuffle[player] == 'crossed': # Crossed doors escape tends to be much more difficult
+            if placed_items["Link's Uncle"] in ['Bow', 'Progressive Bow']:
+                world.escape_assist[player].append('arrows')
+            elif placed_items["Link's Uncle"] in ['Cane of Somaria', 'Cane of Byrna', 'Fire Rod']:
+                world.escape_assist[player].append('magic')
+            # Redundant as it's currently not allowed, but kept here just in case it is allowed later
+            elif placed_items["Link's Uncle"] in ['Bombs (10)']:
+                world.escape_assist[player].append('bombs')
+
 
     for (location, item) in placed_items.items():
         world.push_item(world.get_location(location, player), ItemFactory(item, player), False)
