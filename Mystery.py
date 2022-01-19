@@ -266,7 +266,8 @@ def get_weights(path):
     except Exception as e:
         raise Exception(f"Failed to read weights ({path})") from e
 
-    return parse_yaml(yaml)
+    parsed = parse_yaml(yaml)
+    return parsed if parsed is not None else {}
 
 
 def interpret_on_off(value):
