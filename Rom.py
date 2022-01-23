@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 JAP10HASH = '03a63945398191337e896e5771f77173'
-RANDOMIZERBASEHASH = 'e565f989fd0fc64b5b6d875fe4a4c06d'
+RANDOMIZERBASEHASH = 'be8fe1a176c3884d077452552b3373f8'
 
 import io
 import itertools
@@ -292,6 +292,12 @@ def apply_random_sprite_on_event(rom: LocalRom, sprite, local_random, allow_rand
                 rom.write_bytes(0x300000 + (i * 0x8000), sprite.sprite)
                 rom.write_bytes(0x307000 + (i * 0x8000), sprite.palette)
                 rom.write_bytes(0x307078 + (i * 0x8000), sprite.glove_palette)
+
+    # sprite author credits
+    # we only have room for one so we just use whatever the starting sprite was
+    padded_author = sprite.author_name if sprite is not None else "Nintendo"
+    padded_author = padded_author[:28] if len(padded_author) > 28 else padded_author
+    write_to_credits(rom, 0x118002, padded_author.center(28))
 
 
 def patch_enemizer(world, team: int, player: int, rom: LocalRom, enemizercli):
@@ -1001,11 +1007,6 @@ def patch_rom(world, rom, player, team, enemized, is_mystery=False):
 
     write_custom_shops(rom, world, player)
 
-    def credits_digit(num):
-        # top: $54 is 1, 55 2, etc , so 57=4, 5C=9
-        # bot: $7A is 1, 7B is 2, etc so 7D=4, 82=9 (zero unknown...)
-        return 0x53+num, 0x79+num
-
     if world.keydropshuffle[player] or world.doorShuffle[player] != 'vanilla':
         gt = world.dungeon_layouts[player]['Ganons Tower']
         gt_logic = world.key_logic[player]['Ganons Tower']
@@ -1013,19 +1014,7 @@ def patch_rom(world, rom, player, team, enemized, is_mystery=False):
         for region in gt.master_sector.regions:
             total += count_locations_exclude_logic(region.locations, gt_logic)
         rom.write_byte(0x187012, total)  # dynamic credits
-        # gt big key address: 238B59
-        mid_top, mid_bot = credits_digit(total // 10)
-        last_top, last_bot = credits_digit(total % 10)
-        # top half
-        rom.write_byte(0x118B69, mid_top)
-        rom.write_byte(0x118B6A, last_top)
-        # bottom half
-        rom.write_byte(0x118B87, mid_bot)
-        rom.write_byte(0x118B88, last_bot)
-        if total < 10:
-            rom.write_byte(0x11B615, 0xC1)
-            rom.write_byte(0x118B69, 0xA2)
-            rom.write_byte(0x118B87, 0xC2)
+        write_to_credits(rom, 0x118058, "%2d" % total) # see top of creditsnew.asm
 
     credits_total = 216
     if world.retro[player]:  # Old man cave and Take any caves will count towards collection rate.
@@ -1037,14 +1026,7 @@ def patch_rom(world, rom, player, team, enemized, is_mystery=False):
         rom.write_byte(0x140000, 1)
 
     rom.write_bytes(0x187010, int16_as_bytes(credits_total))  # dynamic credits
-    # collection rate address: 238C37
-    first_top, first_bot = credits_digit((credits_total // 100) % 10)
-    mid_top, mid_bot = credits_digit((credits_total // 10) % 10)
-    last_top, last_bot = credits_digit(credits_total % 10)
-    # top half
-    rom.write_bytes(0x118C46, [first_top, mid_top, last_top])
-    # bottom half
-    rom.write_bytes(0x118C64, [first_bot, mid_bot, last_bot])
+    write_to_credits(rom, 0x118093, "%3d" % credits_total)
 
     # patch medallion requirements
     if world.required_medallions[player][0] == 'Bombos':
@@ -3225,3 +3207,24 @@ def write_pots_to_rom(rom, pot_contents):
         else:
             rom.write_int16(pot_item_room_table_lookup + 2*i, n-2)
     assert n <= pot_item_table_end
+
+# Writes text to the credits in a specific location
+# We have a few things (sprite credit, check count) that we need to update on the fly
+def write_to_credits(rom, address, text):
+    char_map_hi = {
+        "0": 0x53, "1": 0x54, "2": 0x55, "3": 0x56, "4": 0x57, "5": 0x58, "6": 0x59, "7": 0x5A, "8": 0x5B, "9": 0x5C,
+        "A": 0x5D, "B": 0x5E, "C": 0x5F, "D": 0x60, "E": 0x61, "F": 0x62, "G": 0x63, "H": 0x64, "I": 0x65, "J": 0x66,
+        "K": 0x67, "L": 0x68, "M": 0x69, "N": 0x6A, "O": 0x6B, "P": 0x6C, "Q": 0x6D, "R": 0x6E, "S": 0x6F, "T": 0x70,
+        "U": 0x71, "V": 0x72, "W": 0x73, "X": 0x74, "Y": 0x75, "Z": 0x76,
+        "'": 0x77, ".": 0xA0, "/": 0xA2, ":": 0xA3, "_": 0xA6, " ": 0x9F
+    }
+    char_map_lo = {
+        "0": 0x79, "1": 0x7A, "2": 0x7B, "3": 0x7C, "4": 0x7D, "5": 0x7E, "6": 0x7F, "7": 0x80, "8": 0x81, "9": 0x82,
+        "A": 0x83, "B": 0x84, "C": 0x85, "D": 0x86, "E": 0x87, "F": 0x88, "G": 0x89, "H": 0x8A, "I": 0x8B, "J": 0x8C,
+        "K": 0x8D, "L": 0x8E, "M": 0x8F, "N": 0x90, "O": 0x91, "P": 0x92, "Q": 0x93, "R": 0x94, "S": 0x95, "T": 0x96,
+        "U": 0x97, "V": 0x98, "W": 0x99, "X": 0x9A, "Y": 0x9B, "Z": 0x9C,
+        "'": 0x9D, ".": 0xC0, "/": 0xC2, ":": 0xC3, "_": 0xC6, " ": 0x9F
+    }
+
+    rom.write_bytes(address,      [char_map_hi.get(symbol, 0x9F) for symbol in text.upper()])
+    rom.write_bytes(address+0x1E, [char_map_lo.get(symbol, 0x9F) for symbol in text.upper()])
