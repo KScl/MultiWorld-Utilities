@@ -26,7 +26,7 @@ def main():
 
     parser.add_argument('--rom', default='ER_base.sfc', help='Path to an ALttP rom to adjust.')
     parser.add_argument('--baserom', default='Zelda no Densetsu - Kamigami no Triforce (Japan).sfc',
-                        help='Path to an ALttP JAP(1.0) rom to use as a base.')
+                        help='Path to an ALttP JPN(1.0) rom to use as a base.')
     parser.add_argument('--loglevel', default='info', const='info', nargs='?', choices=['error', 'info', 'warning', 'debug'], help='Select level of logging for output.')
     parser.add_argument('--fastmenu', default='normal', const='normal', nargs='?', choices=['normal', 'instant', 'double', 'triple', 'quadruple', 'half'],
                         help='''\
