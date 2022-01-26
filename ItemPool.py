@@ -15,357 +15,382 @@ import source.classes.constants as CONST
 # This file sets the item pools for various modes. Timed modes and triforce hunt are enforced first, and then extra items are specified per mode to fill in the remaining space.
 # Some basic items that various modes require are placed here, including pendants and crystals. Medallion requirements for the two relevant entrances are also decided.
 
-alwaysitems = ['Bombos', 'Book of Mudora', 'Cane of Somaria', 'Ether', 'Fire Rod', 'Flippers', 'Flute', 'Hammer',
-               'Hookshot', 'Ice Rod', 'Lamp',
-               'Cape', 'Magic Powder', 'Mushroom', 'Pegasus Boots', 'Quake', 'Shovel', 'Bug Catching Net',
-               'Cane of Byrna', 'Blue Boomerang', 'Red Boomerang']
-progressivegloves = ['Progressive Glove'] * 2
-basicgloves = ['Power Glove', 'Titans Mitts']
-legacyinsanity = ['Magic Mirror', 'Moon Pearl']
+#easybaseitems = (['Rupees (300)'] * 5 + ['Boss Heart Container'] * 10 + ['Piece of Heart'] * 24)
+#easyfirst15extra = ['Piece of Heart'] * 12 + ['Rupees (300)'] * 3
+#easysecond15extra = ['Rupees (100)'] + ['Arrows (10)'] * 7 + ['Bombs (3)'] * 7
+#easythird10extra = ['Bombs (3)'] * 7 + ['Rupee (1)', 'Rupees (50)', 'Bombs (10)']
+#easyfourth5extra = ['Rupees (50)'] * 2 + ['Bombs (3)'] * 2 + ['Arrows (10)']
+#easyfinal25extra = ['Rupees (50)'] * 4 + ['Rupees (20)'] * 14 + ['Rupee (1)'] + ['Arrows (10)'] * 4 + ['Rupees (5)'] * 2
+#normalbaseitems = (['Arrows (10)', 'Bombs (10)'] + ['Rupees (300)'] * 3 + ['Boss Heart Container'] * 10 + ['Piece of Heart'] * 24)
+#normalfirst15extra = ['Rupees (100)', 'Rupees (300)', 'Rupees (50)'] + ['Arrows (10)'] * 6 + ['Bombs (3)'] * 6
+#normalsecond15extra = ['Bombs (3)'] * 10 + ['Rupees (50)'] * 2 + ['Arrows (10)'] * 2 + ['Rupee (1)']
+#normalthird10extra = ['Rupees (50)'] * 4 + ['Rupees (20)'] * 3 + ['Arrows (10)', 'Rupee (1)', 'Rupees (5)']
+#normalfourth5extra = ['Arrows (10)'] * 2 + ['Rupees (20)'] * 2 + ['Rupees (5)']
+#normalfinal25extra = ['Rupees (20)'] * 23 + ['Rupees (5)'] * 2
 
-normalbottles = ['Bottle', 'Bottle (Red Potion)', 'Bottle (Green Potion)', 'Bottle (Blue Potion)', 'Bottle (Fairy)',
-                 'Bottle (Bee)', 'Bottle (Good Bee)']
-hardbottles = ['Bottle', 'Bottle (Red Potion)', 'Bottle (Green Potion)', 'Bottle (Blue Potion)', 'Bottle (Bee)',
-               'Bottle (Good Bee)']
+Difficulty = namedtuple('Difficulty', [
+    'bottles', 'bottle_count', 'progressive_bottle_limit', # 'same_bottle': if progressive_bottle_limit is 1
+    'sworditems', 'shielditems', 'armoritems', 'bowitems', 'ngbowitems', 'magicitems',
+    'progressive_sword_limit', 'progressive_shield_limit', 'progressive_armor_limit', 'progressive_bow_limit',
+    'heartitems', 'heart_piece_limit', 'boss_heart_container_limit',
+    'extraitems', 'legacybow', 'nglegacybow',
+    'timedohko', 'timedother', 'universal_keys', 'universal_keys_drop',
+])
 
-easybaseitems = (['Sanctuary Heart Container', "Lamp"] + ['Rupees (300)'] * 5 +
-                 ['Boss Heart Container'] * 10 + ['Piece of Heart'] * 24)
-easyfirst15extra = ['Piece of Heart'] * 12 + ['Rupees (300)'] * 3
-easysecond15extra = ['Rupees (100)'] + ['Arrows (10)'] * 7 + ['Bombs (3)'] * 7
-easythird10extra = ['Bombs (3)'] * 7 + ['Rupee (1)', 'Rupees (50)', 'Bombs (10)']
-easyfourth5extra = ['Rupees (50)'] * 2 + ['Bombs (3)'] * 2 + ['Arrows (10)']
-easyfinal25extra = ['Rupees (50)'] * 4 + ['Rupees (20)'] * 14 + ['Rupee (1)'] + ['Arrows (10)'] * 4 + ['Rupees (5)'] * 2
+Upgrades = namedtuple('Upgrades', ['progressive', 'standard'])
 
-normalbaseitems = (['Single Arrow', 'Sanctuary Heart Container', 'Arrows (10)', 'Bombs (10)'] +
-                   ['Rupees (300)'] * 3 + ['Boss Heart Container'] * 10 + ['Piece of Heart'] * 24)
-normalfirst15extra = ['Rupees (100)', 'Rupees (300)', 'Rupees (50)'] + ['Arrows (10)'] * 6 + ['Bombs (3)'] * 6
-normalsecond15extra = ['Bombs (3)'] * 10 + ['Rupees (50)'] * 2 + ['Arrows (10)'] * 2 + ['Rupee (1)']
-normalthird10extra = ['Rupees (50)'] * 4 + ['Rupees (20)'] * 3 + ['Arrows (10)', 'Rupee (1)', 'Rupees (5)']
-normalfourth5extra = ['Arrows (10)'] * 2 + ['Rupees (20)'] * 2 + ['Rupees (5)']
-normalfinal25extra = ['Rupees (20)'] * 23 + ['Rupees (5)'] * 2
+# No longer used
+# total_items_to_place = 153
 
-Difficulty = namedtuple('Difficulty',
-                        ['baseitems', 'bottles', 'bottle_count', 'same_bottle', 'progressiveshield',
-                         'basicshield', 'progressivearmor', 'basicarmor', 'swordless', 'progressivemagic', 'basicmagic',
-                         'progressivesword', 'basicsword', 'progressivebow', 'legacybow', 'basicbow', 'timedohko', 'timedother',
-                         'progressiveglove', 'basicglove', 'alwaysitems', 'legacyinsanity',
-                         'universal_keys',
-                         'extras', 'progressive_sword_limit', 'progressive_shield_limit',
-                         'progressive_armor_limit', 'progressive_bottle_limit',
-                         'progressive_bow_limit', 'heart_piece_limit', 'boss_heart_container_limit'])
+# 29 keys in vanilla
+# 61 keys in key_drop_shuffle
 
-total_items_to_place = 153
+# -----------------------------------------------------------------------------
+# Always present items
+# -----------------------------------------------------------------------------
+medallion_items   = ['Bombos', 'Ether', 'Quake']
+boomerang_items   = ['Blue Boomerang', 'Red Boomerang', 'Hookshot']
+weapon_items      = ['Cane of Byrna', 'Cane of Somaria',  'Fire Rod', 'Hammer', 'Ice Rod']
+legacy_pool_items = ['Magic Mirror', 'Moon Pearl'] # for insanity_legacy
+other_items       = ['Book of Mudora',  'Bug Catching Net', 'Cape',  'Flippers', 'Flute', 'Lamp', 'Magic Powder', 'Mushroom', 'Pegasus Boots', 'Shovel']
+always_items      = medallion_items + boomerang_items + weapon_items + legacy_pool_items + other_items
 
+glove_upgrades = Upgrades(progressive=['Progressive Glove'] * 2, standard=['Power Glove', 'Titans Mitts'])
+# -----------------------------------------------------------------------------
+# Contents that are allowed to be in bottles when you first pick them up
+# -----------------------------------------------------------------------------
+expert_bottles = ['Bottle', 'Bottle (Bee)', 'Bottle (Good Bee)'] # Not used on its own
+hard_bottles   = expert_bottles + ['Bottle (Red Potion)', 'Bottle (Green Potion)', 'Bottle (Blue Potion)']
+normal_bottles = hard_bottles + ['Bottle (Fairy)']
+# -----------------------------------------------------------------------------
 difficulties = {
     'easy': Difficulty(
-        baseitems=easybaseitems,
-        bottles=normalbottles,
+        bottles=normal_bottles,
         bottle_count=8,
-        same_bottle=False,
-        progressiveshield=['Progressive Shield'] * 6,
-        basicshield=['Blue Shield', 'Red Shield', 'Mirror Shield'] * 2,
-        progressivearmor=['Progressive Mail'] * 4,
-        basicarmor=['Blue Mail', 'Red Mail'] * 2,
-        swordless=['Rupees (20)'] * 8,
-        progressivemagic=['Magic Upgrade (1/2)'] * 2,
-        basicmagic=['Magic Upgrade (1/2)', 'Magic Upgrade (1/4)'],
-        progressivesword=['Progressive Sword'] * 8,
-        basicsword=['Master Sword', 'Tempered Sword', 'Golden Sword', 'Fighter Sword'] * 2,
-        progressivebow=["Progressive Bow"] * 4,
-        legacybow=['Bow', 'Silver Arrows'] * 2,
-        basicbow=['Bow', 'Silver Bow'] * 2,
-        timedohko=['Green Clock'] * 25,
-        timedother=['Green Clock'] * 20 + ['Blue Clock'] * 10 + ['Red Clock'] * 10,
-        progressiveglove=progressivegloves,
-        basicglove=basicgloves,
-        alwaysitems=alwaysitems,
-        legacyinsanity=legacyinsanity,
-        universal_keys=['Small Key (Universal)'] * 28,
-        extras=[easyfirst15extra, easysecond15extra, easythird10extra, easyfourth5extra, easyfinal25extra],
+        progressive_bottle_limit=8,
+        sworditems= Upgrades(progressive=['Progressive Sword'] * 8,   standard=['Master Sword', 'Tempered Sword', 'Golden Sword', 'Fighter Sword'] * 2),
+        shielditems=Upgrades(progressive=['Progressive Shield'] * 6,  standard=['Blue Shield', 'Red Shield', 'Mirror Shield'] * 2),
+        armoritems= Upgrades(progressive=['Progressive Mail'] * 4,    standard=['Blue Mail', 'Red Mail'] * 2),
+        bowitems=   Upgrades(progressive=["Progressive Bow"] * 4,     standard=['Bow', 'Silver Bow'] * 2),
+        ngbowitems= Upgrades(progressive=["Progressive Bow"] * 4,     standard=['Bow', 'Silver Bow'] * 2),
+        magicitems= Upgrades(progressive=['Magic Upgrade (1/2)'] * 2, standard=['Magic Upgrade (1/2)', 'Magic Upgrade (1/4)']),
         progressive_sword_limit=8,
         progressive_shield_limit=6,
         progressive_armor_limit=4,
         progressive_bow_limit=4,
-        progressive_bottle_limit=8,
-        boss_heart_container_limit=10,
-        heart_piece_limit=36,
+        heartitems=['Sanctuary Heart Container'] + ['Boss Heart Container'] * 16 + ['Piece of Heart'] * 24,
+        boss_heart_container_limit=12,
+        heart_piece_limit=12, # Enforced by the game (20 heart max)
+        legacybow=  ['Bow', 'Silver Arrows'] * 2,
+        nglegacybow=['Bow', 'Silver Arrows'] * 2,
+        timedohko=  ['Green Clock'] * 25,
+        timedother= ['Green Clock'] * 20 + ['Blue Clock'] * 10 + ['Red Clock'] * 10,
+        universal_keys=     ['Small Key (Universal)'] * 29,
+        universal_keys_drop=['Small Key (Universal)'] * 61,
+        extraitems=['Lamp']
     ),
     'normal': Difficulty(
-        baseitems=normalbaseitems,
-        bottles=normalbottles,
+        bottles=normal_bottles,
         bottle_count=4,
-        same_bottle=False,
-        progressiveshield=['Progressive Shield'] * 3,
-        basicshield=['Blue Shield', 'Red Shield', 'Mirror Shield'],
-        progressivearmor=['Progressive Mail'] * 2,
-        basicarmor=['Blue Mail', 'Red Mail'],
-        swordless=['Rupees (20)'] * 4,
-        progressivemagic=['Magic Upgrade (1/2)', 'Rupees (300)'],
-        basicmagic=['Magic Upgrade (1/2)', 'Rupees (300)'],
-        progressivesword=['Progressive Sword'] * 4,
-        basicsword=['Fighter Sword', 'Master Sword', 'Tempered Sword', 'Golden Sword'],
-        progressivebow=["Progressive Bow"] * 2,
-        legacybow=['Bow', 'Silver Arrows'],
-        basicbow=['Bow', 'Silver Bow'],
-        timedohko=['Green Clock'] * 25,
-        timedother=['Green Clock'] * 20 + ['Blue Clock'] * 10 + ['Red Clock'] * 10,
-        progressiveglove=progressivegloves,
-        basicglove=basicgloves,
-        alwaysitems=alwaysitems,
-        legacyinsanity=legacyinsanity,
-        universal_keys=['Small Key (Universal)'] * 18 + ['Rupees (20)'] * 10,
-        extras=[normalfirst15extra, normalsecond15extra, normalthird10extra, normalfourth5extra, normalfinal25extra],
+        progressive_bottle_limit=4,
+        sworditems= Upgrades(progressive=['Progressive Sword'] * 4,   standard=['Fighter Sword', 'Master Sword', 'Tempered Sword', 'Golden Sword']),
+        shielditems=Upgrades(progressive=['Progressive Shield'] * 3,  standard=['Blue Shield', 'Red Shield', 'Mirror Shield']),
+        armoritems= Upgrades(progressive=['Progressive Mail'] * 2,    standard=['Blue Mail', 'Red Mail']),
+        bowitems=   Upgrades(progressive=["Progressive Bow"] * 2,     standard=['Bow', 'Silver Bow']),
+        ngbowitems= Upgrades(progressive=["Progressive Bow"] * 2,     standard=['Bow', 'Silver Bow']),
+        magicitems= ['Magic Upgrade (1/2)'],
         progressive_sword_limit=4,
         progressive_shield_limit=3,
         progressive_armor_limit=2,
         progressive_bow_limit=2,
-        progressive_bottle_limit=4,
+        heartitems=['Sanctuary Heart Container'] + ['Boss Heart Container'] * 10 + ['Piece of Heart'] * 24,
         boss_heart_container_limit=10,
         heart_piece_limit=24,
+        legacybow=  ['Bow', 'Silver Arrows'],
+        nglegacybow=['Bow', 'Silver Arrows'],
+        timedohko=  ['Green Clock'] * 25,
+        timedother= ['Green Clock'] * 20 + ['Blue Clock'] * 10 + ['Red Clock'] * 10,
+        universal_keys=     ['Small Key (Universal)'] * 20,
+        universal_keys_drop=['Small Key (Universal)'] * 50,
+        extraitems=['Single Arrow']
     ),
     'hard': Difficulty(
-        baseitems=normalbaseitems,
-        bottles=hardbottles,
+        bottles=hard_bottles,
         bottle_count=4,
-        same_bottle=False,
-        progressiveshield=['Progressive Shield'] * 3,
-        basicshield=['Blue Shield', 'Red Shield', 'Red Shield'],
-        progressivearmor=['Progressive Mail'] * 2,
-        basicarmor=['Progressive Mail'] * 2,  # neither will count
-        swordless=['Rupees (20)'] * 4,
-        progressivemagic=['Magic Upgrade (1/2)', 'Rupees (300)'],
-        basicmagic=['Magic Upgrade (1/2)', 'Rupees (300)'],
-        progressivesword=['Progressive Sword'] * 4,
-        basicsword=['Fighter Sword', 'Master Sword', 'Master Sword', 'Tempered Sword'],
-        progressivebow=["Progressive Bow"] * 2,
-        legacybow=['Bow', 'Rupees (20)'],
-        basicbow=['Bow'] * 2,
-        timedohko=['Green Clock'] * 25,
-        timedother=['Green Clock'] * 20 + ['Blue Clock'] * 10 + ['Red Clock'] * 10,
-        progressiveglove=progressivegloves,
-        basicglove=basicgloves,
-        alwaysitems=alwaysitems,
-        legacyinsanity=legacyinsanity,
-        universal_keys=['Small Key (Universal)'] * 12 + ['Rupees (5)'] * 16,
-        extras=[normalfirst15extra, normalsecond15extra, normalthird10extra, normalfourth5extra, normalfinal25extra],
+        progressive_bottle_limit=4,
+        sworditems= Upgrades(progressive=['Progressive Sword'] * 4,   standard=['Fighter Sword', 'Master Sword', 'Master Sword', 'Tempered Sword']),
+        shielditems=Upgrades(progressive=['Progressive Shield'] * 3,  standard=['Blue Shield', 'Red Shield', 'Red Shield']),
+        armoritems= Upgrades(progressive=['Progressive Mail'] * 2,    standard=['Blue Mail', 'Blue Mail']),
+        bowitems=   Upgrades(progressive=["Progressive Bow"] * 2,     standard=['Bow'] * 2),
+        ngbowitems= Upgrades(progressive=["Progressive Bow"] * 2,     standard=['Bow', 'Silver Bow']),
+        magicitems= ['Magic Upgrade (1/2)'],
         progressive_sword_limit=3,
         progressive_shield_limit=2,
         progressive_armor_limit=1,
         progressive_bow_limit=1,
-        progressive_bottle_limit=4,
+        heartitems=['Sanctuary Heart Container'] + ['Boss Heart Container'] * 8 + ['Piece of Heart'] * 20,
         boss_heart_container_limit=6,
         heart_piece_limit=16,
+        legacybow=  ['Bow'],
+        nglegacybow=['Bow', 'Silver Arrows'],
+        timedohko=  ['Green Clock'] * 25,
+        timedother= ['Green Clock'] * 20 + ['Blue Clock'] * 10 + ['Red Clock'] * 10,
+        universal_keys=     ['Small Key (Universal)'] * 14,
+        universal_keys_drop=['Small Key (Universal)'] * 42,
+        extraitems=['Single Arrow']
     ),
     'expert': Difficulty(
-        baseitems=normalbaseitems,
-        bottles=hardbottles,
+        bottles=hard_bottles,
         bottle_count=4,
-        same_bottle=False,
-        progressiveshield=['Progressive Shield'] * 3,
-        basicshield=['Progressive Shield'] * 3,
-        # only the first one will upgrade, making this equivalent to two blue shields
-        progressivearmor=['Progressive Mail'] * 2,  # neither will count
-        basicarmor=['Progressive Mail'] * 2,  # neither will count
-        swordless=['Rupees (20)'] * 4,
-        progressivemagic=['Magic Upgrade (1/2)', 'Rupees (300)'],
-        basicmagic=['Magic Upgrade (1/2)', 'Rupees (300)'],
-        progressivesword=['Progressive Sword'] * 4,
-        basicsword=['Fighter Sword', 'Fighter Sword', 'Master Sword', 'Master Sword'],
-        progressivebow=["Progressive Bow"] * 2,
-        legacybow=['Bow', 'Rupees (20)'],
-        basicbow=['Bow'] * 2,
-        timedohko=['Green Clock'] * 20 + ['Red Clock'] * 5,
-        timedother=['Green Clock'] * 20 + ['Blue Clock'] * 10 + ['Red Clock'] * 10,
-        progressiveglove=progressivegloves,
-        basicglove=basicgloves,
-        alwaysitems=alwaysitems,
-        legacyinsanity=legacyinsanity,
-        universal_keys=['Small Key (Universal)'] * 12 + ['Rupees (5)'] * 16,
-        extras=[normalfirst15extra, normalsecond15extra, normalthird10extra, normalfourth5extra, normalfinal25extra],
+        progressive_bottle_limit=4,
+        sworditems= Upgrades(progressive=['Progressive Sword'] * 3,   standard=['Fighter Sword', 'Master Sword', 'Master Sword']),
+        shielditems=Upgrades(progressive=['Progressive Shield'] * 2,  standard=['Blue Shield', 'Blue Shield']),
+        armoritems= [], # Completely removed
+        bowitems=   Upgrades(progressive=["Progressive Bow"] * 2,     standard=['Bow'] * 2),
+        ngbowitems= Upgrades(progressive=["Progressive Bow"] * 2,     standard=['Bow', 'Silver Bow']),
+        magicitems= ['Magic Upgrade (1/2)'],
         progressive_sword_limit=2,
         progressive_shield_limit=1,
         progressive_armor_limit=0,
         progressive_bow_limit=1,
-        progressive_bottle_limit=4,
+        heartitems=['Sanctuary Heart Container'] + ['Boss Heart Container'] * 4 + ['Piece of Heart'] * 12,
         boss_heart_container_limit=2,
         heart_piece_limit=8,
+        legacybow=  ['Bow'],
+        nglegacybow=['Bow', 'Silver Arrows'],
+        timedohko=  ['Green Clock'] * 20 + ['Red Clock'] * 5,
+        timedother= ['Green Clock'] * 20 + ['Blue Clock'] * 10 + ['Red Clock'] * 10,
+        universal_keys=     ['Small Key (Universal)'] * 14,
+        universal_keys_drop=['Small Key (Universal)'] * 42,
+        extraitems=['Single Arrow']
     ),
 }
 
-ice_rod_hunt_difficulties = dict()
-for diff in {'easy', 'normal', 'hard', 'expert'}:
-    ice_rod_hunt_difficulties[diff] = Difficulty(
-        baseitems=['Nothing'] * 41,
-        bottles=['Nothing'] * 4,
-        bottle_count=difficulties[diff].bottle_count,
-        same_bottle=difficulties[diff].same_bottle,
-        progressiveshield=['Nothing'] * 3,
-        basicshield=['Nothing'] * 3,
-        progressivearmor=['Nothing'] * 2,
-        basicarmor=['Nothing'] * 2,
-        swordless=['Nothing'] * 4,
-        progressivemagic=['Nothing'] * 2,
-        basicmagic=['Nothing'] * 2,
-        progressivesword=['Nothing'] * 4,
-        basicsword=['Nothing'] * 4,
-        progressivebow=['Nothing'] * 2,
-        legacybow=['Nothing'] * 2,
-        basicbow=['Nothing'] * 2,
-        timedohko=difficulties[diff].timedohko,
-        timedother=difficulties[diff].timedother,
-        progressiveglove=['Nothing'] * 2,
-        basicglove=['Nothing'] * 2,
-        alwaysitems=['Ice Rod'] + ['Nothing'] * 19,
-        legacyinsanity=['Nothing'] * 2,
-        universal_keys=['Nothing'] * 28,
-        extras=[['Nothing'] * 15, ['Nothing'] * 15, ['Nothing'] * 10, ['Nothing'] * 5, ['Nothing'] * 25],
-        progressive_sword_limit=difficulties[diff].progressive_sword_limit,
-        progressive_shield_limit=difficulties[diff].progressive_shield_limit,
-        progressive_armor_limit=difficulties[diff].progressive_armor_limit,
-        progressive_bow_limit=difficulties[diff].progressive_bow_limit,
-        progressive_bottle_limit=difficulties[diff].progressive_bottle_limit,
-        boss_heart_container_limit=difficulties[diff].boss_heart_container_limit,
-        heart_piece_limit=difficulties[diff].heart_piece_limit,
-    )
+# Gets the "core" item pool, of every non-junk item in the seed.
+# Returns a tuple of, in order:
+#   - A list of items in the item pool
+#   - A dictionary of required pre-placed locations and the items within them
+#   - A list of items that the player must start with
+def get_pool_core(world, player: int):
+    shuffle = world.shuffle[player]
+    difficulty = world.difficulty[player]
+    goal = world.goal[player]
+    mode = world.mode[player]
+    swords = world.swords[player]
+    retro = world.retro[player]
+    logic = world.logic[player]
 
-# Translate between Mike's label array and YAML/JSON keys
-def get_custom_array_key(item):
-  label_switcher = {
-      "silverarrow": "silversupgrade",
-      "blueboomerang": "boomerang",
-      "redboomerang": "redmerang",
-      "bugcatchingnet": "bugnet",
-      "bookofmudora": "book",
-      "pegasusboots": "boots",
-      "titansmitts": "titansmitt",
-      "pieceofheart": "heartpiece",
-      "bossheartcontainer": "heartcontainer",
-      "sanctuaryheartcontainer": "sancheart",
-      "mastersword": "sword2",
-      "temperedsword": "sword3",
-      "goldensword": "sword4",
-    "blueshield": "shield1",
-    "redshield": "shield2",
-    "mirrorshield": "shield3",
-    "bluemail": "mail2",
-    "redmail": "mail3",
-    "progressivearmor": "progressivemail",
-    "splus12": "halfmagic",
-    "splus14": "quartermagic",
-    "singlearrow": "arrow1",
-    "singlebomb": "bomb1",
-    "triforcepiece": "triforcepieces"
-  }
-  key = item.lower()
-  trans = {
-    " ": "",
-    '(': "",
-    '/': "",
-    ')': "",
-    '+': "",
-    "magic": "",
-    "caneof": "",
-    "upgrade": "splus",
-    "arrows": "arrow",
-    "arrowplus": "arrowsplus",
-    "bombs": "bomb",
-    "bombplus": "bombsplus",
-    "rupees": "rupee"
-  }
-  for check in trans:
-      repl = trans[check]
-      key = key.replace(check,repl)
-  if key in label_switcher:
-      key = label_switcher.get(key)
-  return key
+    # Return values
+    pool = []
+    placed_items = {}
+    precollected_items = []
 
+    diff = difficulties[difficulty]
 
-def toss_junk_item(pool):
-    items = ['Rupees (20)', 'Bombs (3)', 'Arrows (10)', 'Rupees (5)', 'Rupee (1)', 'Bombs (10)',
-             'Single Arrow', 'Rupees (50)', 'Rupees (100)', 'Single Bomb', 'Bee', 'Bee Trap',
-             'Rupees (300)', 'Nothing']
-    for item in items:
-        big20 = next((i for i in pool if i == item), None)
-        if big20:
-            pool.remove(big20)
-            return
-    raise Exception("Unable to find a junk item to discard")
+    def place_item(loc, item):
+        assert loc not in placed_items
+        placed_items[loc] = item
+
+    def get_possibly_progressive_items(pool, item_type):
+        if type(pool) is Upgrades:
+            return pool.progressive if world.want_progressives(player, item_type) else pool.standard
+        return pool
+
+    pool.extend(always_items)
+
+    # insanity legacy shuffle doesn't have fake LW/DW logic so guaranteed Mirror and Moon Pearl at the start
+    if shuffle == 'insanity_legacy':
+        place_item("Link's House", legacy_pool_items[0])
+        place_item("Sanctuary", legacy_pool_items[1])
+
+    # provide boots to major glitch dependent seeds
+    if logic in {'owglitches', 'nologic'} and world.glitch_boots[player]:
+        precollected_items.append('Pegasus Boots')
+
+    # expert+ difficulties produce the same contents for all bottles, since only one bottle is available
+    # (not true anymore??)
+    if diff.progressive_bottle_limit <= 1:
+        pool.append([world.random.choice(diff.bottles)] * diff.bottle_count)
+    else:
+        [pool.append(world.random.choice(diff.bottles)) for _ in range(diff.bottle_count)]
+
+    pool.extend(get_possibly_progressive_items(glove_upgrades, 'glove'))
+    pool.extend(get_possibly_progressive_items(diff.shielditems, 'shield'))
+    pool.extend(get_possibly_progressive_items(diff.armoritems, 'armor'))
+    pool.extend(get_possibly_progressive_items(diff.magicitems, 'capacity'))
+
+    if (swords == 'swordless' or logic == 'noglitches'): # Silvers required regardless of difficulty
+        pool.extend(diff.nglegacybow if 'l' in world.progressive[player] else get_possibly_progressive_items(diff.ngbowitems))
+    else:
+        pool.extend(diff.legacybow if 'l' in world.progressive[player] else get_possibly_progressive_items(diff.bowitems))
+
+    # -------------------------------------------------------------------------
+    # Place weapons
+    # -------------------------------------------------------------------------
+    sword_pool = get_possibly_progressive_items(diff.sworditems, 'sword')
+    if swords == 'swordless':
+        sword_pool = []
+    elif swords == 'vanilla':
+        if 'Fighter Sword' in sword_pool:
+            # Place Fighter Sword & Shield at Uncle (vanilla & pre-progressive VT behavior)
+            place_item("Link's Uncle", 'Fighter Sword & Shield')
+            sword_pool.remove('Fighter Sword') # Only one of them, for Expert has (had?) two
+
+            # As we have the first shield now, remove it from the pool
+            pool.remove('Blue Shield') if 'Blue Shield' in pool else pool.remove('Progressive Shield')
+        else:
+            place_item("Link's Uncle", sword_pool.pop())
+ 
+        world.random.shuffle(sword_pool)
+        place_item('Blacksmith', sword_pool.pop())
+        place_item('Pyramid Fairy - Left', sword_pool.pop())
+        place_item('Master Sword Pedestal', sword_pool.pop()) if goal != 'pedestal' else sword_pool.pop()
+    elif swords == 'assured':
+        precollected_items.append('Fighter Sword' if 'Fighter Sword' in sword_pool else 'Progressive Sword')
+
+    pool.extend(sword_pool)
+    # -------------------------------------------------------------------------
+
+    # extraitems = total_items_to_place - len(pool) - len(placed_items)
+
+    if world.timer[player] in ['timed', 'timed-countdown']:
+        pool.extend(diff.timedother)
+    elif world.timer[player] in ['timed-ohko']:
+        pool.extend(diff.timedohko)
+
+    if 'triforcehunt' in goal:
+        pool.extend(["Treasure Hunt Item"] * world.triforce_pieces_available[player])
+
+    if world.keyshuffle[player] == "universal":
+        pool.extend(diff.universal_keys_drop if world.keydropshuffle[player] else diff.universal_keys)
+
+        if world.doorShuffle[player] != 'vanilla':
+            # Previous version of this code replaced some Rupees with universal keys
+            # as it was done last; we moved this entire section up to place keys prior
+            # to extra items, so we don't need to do that replacement
+            pool.extend(['Small Key (Universal)'] * world.random.randint(1, 10))
+
+        if mode == 'standard' and world.doorShuffle[player] == 'vanilla':
+            key_locations = []
+            current_locations = []
+            if world.keydropshuffle[player]: # Need 4 (!) keys to finish escape
+                key_locations = [
+                    ["Link's House", 'Secret Passage', 'Hyrule Castle - Boomerang Chest', 'Hyrule Castle - Boomerang Guard Key Drop'],
+                    ['Hyrule Castle - Map Chest', 'Hyrule Castle - Map Guard Key Drop'],
+                    ["Hyrule Castle - Zelda's Chest", 'Hyrule Castle - Big Key Drop', 'Sewers - Dark Cross'],
+                    ['Hyrule Castle - Key Rat Key Drop']
+                ]
+            else: # Need 1 key to finish escape
+                key_locations = [
+                    ['Secret Passage', 'Hyrule Castle - Boomerang Chest', 'Hyrule Castle - Map Chest', "Hyrule Castle - Zelda's Chest", 'Sewers - Dark Cross']
+                ]
+            for locations in key_locations:
+                current_locations.extend(locations)
+                place_key_here = world.random.choice(current_locations)
+                current_locations.remove(place_key_here)
+                place_item(place_key_here, item_to_place)
+                pool.remove(item_to_place)
+
+    # Remove requested items from pool
+    # This can be dangerous if progression items are removed, use at your own risk
+    for arg_remove in world.item_pool_remove[player]:
+        try:
+            if arg_remove in item_name_groups: # Allow choosing from an item group name
+                choices = [i for i in pool if i in item_name_groups[arg_remove]]
+                arg_remove = world.random.choice(choices)
+            pool.remove(arg_remove)
+        except Exception:
+            pass # Silently fail
+
+    # Add requested extra items to pool
+    # This is generally safe no matter what you do, the new items are just treated as extras
+    pool.extend(world.item_pool_extend[player])
+
+    if retro:
+        erase = {'Single Arrow', 'Arrows (10)', 'Arrow Upgrade (+5)', 'Arrow Upgrade (+10)'}
+        pool = [item for item in pool if item not in erase]
+
+    if goal == 'icerodhunt': # Everything precollected
+        irh_pool = [item for item in pool if item == 'Ice Rod']
+        irc_collect = [item for item in pool if item != 'Ice Rod']
+        return (irh_pool, {}, irh_collect)
+
+    [pool.remove(item) for item in precollected_items if item in pool]
+    [pool.remove(item) for item in placed_items.values() if item in pool]
+    return (pool, placed_items, precollected_items)
 
 
 def generate_itempool(world, player: int):
     if world.difficulty[player] not in difficulties:
         raise NotImplementedError(f"Diffulty {world.difficulty[player]}")
     if world.goal[player] not in {'ganon', 'pedestal', 'dungeons', 'triforcehunt', 'localtriforcehunt', 'icerodhunt',
-                                  'ganontriforcehunt', 'localganontriforcehunt', 'crystals', 'ganonpedestal'}:
+                                  'ganontriforcehunt', 'localganontriforcehunt', 'crystals', 'ganonpedestal', 'plando'}:
         raise NotImplementedError(f"Goal {world.goal[player]}")
     if world.mode[player] not in {'open', 'standard', 'inverted'}:
         raise NotImplementedError(f"Mode {world.mode[player]}")
     if world.timer[player] not in {False, 'none', 'display', 'timed', 'timed-ohko', 'ohko', 'timed-countdown'}:
         raise NotImplementedError(f"Timer {world.mode[player]}")
 
+    # if the player can be in ohko at any point (even if not always),
+    # we cannot rely on the player taking damage at any point
     if world.timer[player] in ['ohko', 'timed-ohko']:
         world.can_take_damage[player] = False
-    if world.goal[player] in ['pedestal', 'triforcehunt', 'localtriforcehunt', 'icerodhunt']:
-        world.push_item(world.get_location('Ganon', player), ItemFactory('Nothing', player), False)
-    else:
-        world.push_item(world.get_location('Ganon', player), ItemFactory('Triforce', player), False)
 
-    if world.goal[player] in ['triforcehunt', 'localtriforcehunt']:
+    # =========================================================================
+    # set up Triforce placement for goals
+    # -------------------------------------------------------------------------
+    triforce_location = 'Ganon' # Kept as string for some special behavior later
+
+    if world.goal[player] in ['plando']:
+        # Do not place a goal.
+        # One must be placed with the plandomizer or seed generation will fail.
+        triforce_location = None
+    elif world.goal[player] in ['triforcehunt', 'localtriforcehunt']:
+        # Must turn in triforce pieces to win
         region = world.get_region('Light World', player)
-
-        loc = Location(player, "Murahdahla", parent=region)
-        loc.access_rule = lambda state: state.has_triforce_pieces(state.world.treasure_hunt_count[player], player)
-        region.locations.append(loc)
-        world.dynamic_locations.append(loc)
-
+        turnin_location = Location(player, "Murahdahla", parent=region)
+        turnin_location.access_rule = lambda state: state.has_triforce_pieces(state.world.treasure_hunt_count[player], player)
+        region.locations.append(turnin_location)
+        world.dynamic_locations.append(turnin_location)
         world.clear_location_cache()
 
-        world.push_item(loc, ItemFactory('Triforce', player), False)
-        loc.event = True
-        loc.locked = True
-
-    if world.goal[player] == 'icerodhunt':
+        triforce_location = turnin_location
+    elif world.goal[player] in ['pedestal']:
+        # Must pull pedestal to win
+        triforce_location = world.get_location('Master Sword Pedestal', player)
+    elif world.goal[player] in ['icerodhunt']:
+        # Must kill Trinexx to win
         world.progression_balancing[player] = False
-        loc = world.get_location('Turtle Rock - Boss', player)
-        world.push_item(loc, ItemFactory('Triforce', player), False)
+        triforce_location = world.get_location('Turtle Rock - Boss', player)
+        # As this essentially makes one dungeon prize impossible to get, forbid pedestal or pyramid fairy from being required
+        forbid_items_for_player(triforce_location, {'Red Pendant', 'Green Pendant', 'Blue Pendant', 'Crystal 5', 'Crystal 6'}, player)
+
         if world.boss_shuffle[player] != 'none':
             if 'turtle rock-' not in world.boss_shuffle[player]:
                 world.boss_shuffle[player] = f'Turtle Rock-Trinexx;{world.boss_shuffle[player]}'
             else:
                 logging.warning(f'Cannot guarantee that Trinexx is the boss of Turtle Rock for player {player}')
-        loc.event = True
-        loc.locked = True
-        forbid_items_for_player(loc, {'Red Pendant', 'Green Pendant', 'Blue Pendant', 'Crystal 5', 'Crystal 6'}, player)
-        itemdiff = difficulties[world.difficulty[player]]
-        itempool = []
-        itempool.extend(itemdiff.alwaysitems)
-        itempool.remove('Ice Rod')
+        # Note: icerodhunt precollects all items in get_pool_core except the ice rod
 
-        itempool.extend(['Single Arrow', 'Sanctuary Heart Container'])
-        itempool.extend(['Boss Heart Container'] * itemdiff.boss_heart_container_limit)
-        itempool.extend(['Piece of Heart'] * itemdiff.heart_piece_limit)
-        itempool.extend(itemdiff.bottles)
-        itempool.extend(itemdiff.basicbow)
-        itempool.extend(itemdiff.basicarmor)
-        if world.swords[player] != 'swordless':
-            itempool.extend(itemdiff.basicsword)
-        itempool.extend(itemdiff.basicmagic)
-        itempool.extend(itemdiff.basicglove)
-        itempool.extend(itemdiff.basicshield)
-        itempool.extend(itemdiff.legacyinsanity)
-        itempool.extend(['Rupees (300)'] * 34)
-        itempool.extend(['Bombs (10)'] * 5)
-        itempool.extend(['Arrows (10)'] * 7)
-        if world.keyshuffle[player] == 'universal':
-            itempool.extend(itemdiff.universal_keys)
-            itempool.append('Small Key (Universal)')
+    # -------------------------------------------------------------------------
+    if triforce_location is not None:
+        if triforce_location == 'Ganon':
+            triforce_location = world.get_location('Ganon', player)
+        else: # Ensure Ganon has nothing so we don't try to place an item there (lol)
+            ganon_location = world.get_location('Ganon', player)
+            world.push_item(ganon_location, ItemFactory('Nothing', player), False)
+            ganon_location.event = ganon_location.locked = True
 
-        for item in itempool:
-            world.push_precollected(ItemFactory(item, player))
+        # now place the Triforce at the goal
+        world.push_item(triforce_location, ItemFactory('Triforce', player), False)
+        triforce_location.event = triforce_location.locked = True
 
+    # Extra handling for treasure hunts
+    treasure_hunt_goal = world.goal[player] in ['triforcehunt', 'localtriforcehunt', 'ganontriforcehunt', 'localganontriforcehunt']
 
-    world.get_location('Ganon', player).event = True
-    world.get_location('Ganon', player).locked = True
+    # =========================================================================
+    # Set up other, non-goal events
+    # -------------------------------------------------------------------------
     event_pairs = [
         ('Agahnim 1', 'Beat Agahnim 1'),
         ('Agahnim 2', 'Beat Agahnim 2'),
@@ -394,25 +419,37 @@ def generate_itempool(world, player: int):
         event = ItemFactory(event_name, player)
         world.push_item(location, event, False)
         location.event = location.locked = True
-
+    # -------------------------------------------------------------------------
 
     # set up item pool
-    additional_triforce_pieces = 0
-    if world.custom:
-        (pool, placed_items, precollected_items, clock_mode, treasure_hunt_count,
-         treasure_hunt_icon) = make_custom_item_pool(world, player)
-    else:
-        pool, placed_items, precollected_items, clock_mode, treasure_hunt_count, \
-        treasure_hunt_icon, additional_triforce_pieces = get_pool_core(world, player)
+    # get_pool_core now handles progression items, things added by modes, etc.
+    # and explicitly does not include junk items
+    # junk items will be added to the pool at a later step
+    pool, placed_items, precollected_items = get_pool_core(world, player)
 
-    if player in world.pool_adjustment.keys():
-        amt = world.pool_adjustment[player]
-        if amt < 0:
-            for _ in range(amt, 0):
-                toss_junk_item(pool)
-        elif amt > 0:
-            for _ in range(0, amt):
-                pool.append('Rupees (20)' if world.goal[player] != 'icerodhunt' else 'Nothing')
+    world.clock_mode[player] = {
+        'timed': 'stopwatch',
+        'timed-countdown': 'countdown',
+        'timed-ohko': 'countdown-ohko',
+        'display': 'stopwatch',
+        'ohko': 'ohko'
+    }.get(world.timer[player], False)
+
+    if treasure_hunt_goal:
+        treasure_hunt_count = world.triforce_pieces_required[player]
+        treasure_hunt_icon = 'Triforce Piece' # TODO Possibly allow changing this
+        pool = [(treasure_hunt_icon if item in 'Treasure Hunt Item' else item) for item in pool]
+        world.treasure_hunt_count[player] = treasure_hunt_count % 999
+        world.treasure_hunt_icon[player] = treasure_hunt_icon
+
+    #if player in world.pool_adjustment.keys():
+    #    amt = world.pool_adjustment[player]
+    #    if amt < 0:
+    #        for _ in range(amt, 0):
+    #            toss_junk_item(pool)
+    #    elif amt > 0:
+    #        for _ in range(0, amt):
+    #            pool.append('Rupees (20)' if world.goal[player] != 'icerodhunt' else 'Nothing')
 
 
     for item in precollected_items:
@@ -459,14 +496,6 @@ def generate_itempool(world, player: int):
 
     items = ItemFactory(pool, player)
 
-    if clock_mode is not None:
-        world.clock_mode[player] = clock_mode
-
-    if treasure_hunt_count is not None:
-        world.treasure_hunt_count[player] = treasure_hunt_count % 999
-    if treasure_hunt_icon is not None:
-        world.treasure_hunt_icon[player] = treasure_hunt_icon
-
     dungeon_items = [item for item in get_dungeon_item_pool(world) if item.player == player
                            and ((item.smallkey and world.keyshuffle[player])
                                 or (item.bigkey and world.bigkeyshuffle[player])
@@ -501,14 +530,14 @@ def generate_itempool(world, player: int):
             nonprogressionitems.append(GetBeemizerItem(world, item.player, item))
     world.random.shuffle(nonprogressionitems)
 
-    if additional_triforce_pieces:
-        if additional_triforce_pieces > len(nonprogressionitems):
-            raise FillError(f"Not enough non-progression items to replace with Triforce pieces found for player "
-                            f"{world.get_player_names(player)}.")
-        progressionitems += [ItemFactory("Triforce Piece", player)] * additional_triforce_pieces
-        nonprogressionitems.sort(key=lambda item: int("Heart" in item.name))  # try to keep hearts in the pool
-        nonprogressionitems = nonprogressionitems[additional_triforce_pieces:]
-        world.random.shuffle(nonprogressionitems)
+    #if additional_triforce_pieces:
+    #    if additional_triforce_pieces > len(nonprogressionitems):
+    #        raise FillError(f"Not enough non-progression items to replace with Triforce pieces found for player "
+    #                        f"{world.get_player_names(player)}.")
+    #    progressionitems += [ItemFactory("Triforce Piece", player)] * additional_triforce_pieces
+    #    nonprogressionitems.sort(key=lambda item: int("Heart" in item.name))  # try to keep hearts in the pool
+    #    nonprogressionitems = nonprogressionitems[additional_triforce_pieces:]
+    #    world.random.shuffle(nonprogressionitems)
 
     # shuffle medallions
     if world.required_medallions[player][0] == "random":
@@ -646,392 +675,3 @@ def fill_prizes(world, attempts=15):
             break
         else:
             raise FillError('Unable to place dungeon prizes')
-
-def get_pool_core(world, player: int):
-    shuffle = world.shuffle[player]
-    difficulty = world.difficulty[player]
-    timer = world.timer[player]
-    goal = world.goal[player]
-    mode = world.mode[player]
-    swords = world.swords[player]
-    retro = world.retro[player]
-    logic = world.logic[player]
-
-    pool = []
-    placed_items = {}
-    precollected_items = []
-    clock_mode = None
-    treasure_hunt_count = None
-    treasure_hunt_icon = None
-
-    diff = ice_rod_hunt_difficulties[difficulty] if goal == 'icerodhunt' else difficulties[difficulty]
-    pool.extend(diff.alwaysitems)
-
-    def place_item(loc, item):
-        assert loc not in placed_items
-        placed_items[loc] = item
-
-    # provide boots to major glitch dependent seeds
-    if logic in {'owglitches', 'nologic'} and world.glitch_boots[player] and goal != 'icerodhunt':
-        precollected_items.append('Pegasus Boots')
-        pool.remove('Pegasus Boots')
-        pool.append('Rupees (20)')
-
-    pool.extend(diff.progressiveglove if world.want_progressives(player, 'glove') else diff.basicglove)
-
-    # insanity legacy shuffle doesn't have fake LW/DW logic so for now guaranteed Mirror and Moon Pearl at the start
-    if shuffle == 'insanity_legacy':
-        place_item('Link\'s House', diff.legacyinsanity[0])
-        place_item('Sanctuary', diff.legacyinsanity[1])
-    else:
-        pool.extend(diff.legacyinsanity)
-
-    if timer == 'display':
-        clock_mode = 'stopwatch'
-    elif timer == 'ohko':
-        clock_mode = 'ohko'
-
-    pool.extend(diff.baseitems)
-
-    # expert+ difficulties produce the same contents for
-    # all bottles, since only one bottle is available
-    thisbottle = None
-    for _ in range(diff.bottle_count):
-        if not diff.same_bottle or not thisbottle:
-            thisbottle = world.random.choice(diff.bottles)
-        pool.append(thisbottle)
-
-    pool.extend(diff.progressiveshield if world.want_progressives(player, 'shield') else diff.basicshield)
-    pool.extend(diff.progressivearmor if world.want_progressives(player, 'armor') else diff.basicarmor)
-    pool.extend(diff.progressivemagic if world.want_progressives(player, 'capacity') else diff.basicmagic)
-
-    if goal == 'icerodhunt': # It's always nothing anyway...
-        pool.extend(diff.basicbow)
-    elif world.want_progressives(player, 'bow'):
-        pool.extend(diff.progressivebow)
-    elif (swords == 'swordless' or logic == 'noglitches'): # Silvers required regardless of difficulty
-        bow_pool = ['Bow', 'Silver Arrows'] if 'l' in world.progressive[player] else ['Bow', 'Silver Bow']
-        if difficulty == "easy":
-            bow_pool *= 2
-        pool.extend(bow_pool)
-    else:
-        pool.extend(diff.legacybow if 'l' in world.progressive[player] else diff.basicbow)
-
-    if swords == 'swordless':
-        pool.extend(diff.swordless)
-    elif swords == 'vanilla':
-        swords_to_use = diff.progressivesword.copy()
-        if not world.want_progressives(player, "sword"):
-            # Place Fighter Sword & Shield at Uncle (vanilla & pre-progressive VT behavior)
-            swords_to_use = diff.basicsword.copy()
-            swords_to_use.remove('Fighter Sword') # Only one of them, for Expert has two
-            place_item('Link\'s Uncle', 'Fighter Sword & Shield')
-
-            # Replace non-progressive Fighter Shield with a big 20
-            if 'Blue Shield' in pool:
-                pool.remove('Blue Shield')
-                pool.append('Rupees (20)')
-        else:
-            place_item('Link\'s Uncle', swords_to_use.pop())
- 
-        world.random.shuffle(swords_to_use)
-        place_item('Blacksmith', swords_to_use.pop())
-        place_item('Pyramid Fairy - Left', swords_to_use.pop())
-        if goal != 'pedestal':
-            place_item('Master Sword Pedestal', swords_to_use.pop())
-        else:
-            swords_to_use.pop()
-            place_item('Master Sword Pedestal', 'Triforce')
-        if swords_to_use:
-            pool.extend(swords_to_use)
-    else:
-        progressive_swords = world.want_progressives(player, "sword")
-        pool.extend(diff.progressivesword if progressive_swords else diff.basicsword)
-        if swords == 'assured' and goal != 'icerodhunt':
-            if progressive_swords:
-                precollected_items.append('Progressive Sword')
-                pool.remove('Progressive Sword')
-            else:
-                precollected_items.append('Fighter Sword')
-                pool.remove('Fighter Sword')
-            pool.extend(['Rupees (50)'])
-
-    extraitems = total_items_to_place - len(pool) - len(placed_items)
-
-    if timer in ['timed', 'timed-countdown']:
-        pool.extend(diff.timedother)
-        extraitems -= len(diff.timedother)
-        clock_mode = 'stopwatch' if timer == 'timed' else 'countdown'
-    elif timer == 'timed-ohko':
-        pool.extend(diff.timedohko)
-        extraitems -= len(diff.timedohko)
-        clock_mode = 'countdown-ohko'
-    additional_pieces_to_place = 0
-    if 'triforcehunt' in goal:
-        pieces_in_core = min(extraitems, world.triforce_pieces_available[player])
-        additional_pieces_to_place = world.triforce_pieces_available[player] - pieces_in_core
-        pool.extend(["Triforce Piece"] * pieces_in_core)
-        extraitems -= pieces_in_core
-        treasure_hunt_count = world.triforce_pieces_required[player]
-        treasure_hunt_icon = 'Triforce Piece'
-
-    if world.keyshuffle[player] == "universal":
-        pool.extend(diff.universal_keys)
-        item_to_place = 'Small Key (Universal)' if goal != 'icerodhunt' else 'Nothing'
-        if world.doorShuffle[player] != 'vanilla':
-            # Previous version of this code replaced some Rupees with universal keys
-            # as it was done last; we moved this entire section up to place keys prior
-            # to extra items, so we don't need to do that replacement
-            pool.extend([item_to_place] * world.random.randint(1, 10))
-
-        if mode == 'standard' and world.doorShuffle[player] == 'vanilla':
-            if world.keydropshuffle[player]: # Need 4 (!) keys to finish escape
-                key_1_location = ["Link's House", 'Secret Passage', 'Hyrule Castle - Boomerang Chest', 'Hyrule Castle - Boomerang Guard Key Drop']
-                key_2_location = key_1_location + ['Hyrule Castle - Map Chest', 'Hyrule Castle - Map Guard Key Drop']
-                key_3_location = key_2_location + ["Hyrule Castle - Zelda's Chest", 'Hyrule Castle - Big Key Drop', 'Sewers - Dark Cross']
-                key_4_location = key_3_location + ['Hyrule Castle - Key Rat Key Drop']
-
-                place_key = world.random.choice(key_1_location)
-                key_2_location.remove(place_key)
-                key_3_location.remove(place_key)
-                key_4_location.remove(place_key)
-                place_item(place_key, item_to_place)
-
-                place_key = world.random.choice(key_2_location)
-                key_3_location.remove(place_key)
-                key_4_location.remove(place_key)
-                place_item(place_key, item_to_place)
-
-                place_key = world.random.choice(key_3_location)
-                key_4_location.remove(place_key)
-                place_item(place_key, item_to_place)
-
-                place_key = world.random.choice(key_4_location)
-                place_item(place_key, item_to_place)
-            else: # Need 1 key to finish escape
-                key_location = world.random.choice(['Secret Passage', 'Hyrule Castle - Boomerang Chest', 'Hyrule Castle - Map Chest', 'Hyrule Castle - Zelda\'s Chest', 'Sewers - Dark Cross'])
-                place_item(key_location, item_to_place)
-        else:
-            pool.extend([item_to_place])
-
-    # Remove requested items from pool
-    # This can be dangerous if progression items are removed, use at your own risk
-    for arg_remove in world.item_pool_remove[player]:
-        try:
-            if arg_remove in item_name_groups: # Allow choosing from an item group name
-                choices = [i for i in pool if i in item_name_groups[arg_remove]]
-                arg_remove = world.random.choice(choices)
-            pool.remove(arg_remove)
-            extraitems += 1
-        except Exception:
-            pass # Silently fail
-
-    # Add requested extra items to pool
-    # This is generally safe no matter what you do, the new items are just treated as extras
-    extend_pool = world.item_pool_extend[player]
-    if extraitems >= len(extend_pool):
-        pool.extend(extend_pool)
-        extraitems -= len(extend_pool)
-    elif extraitems > 0:
-        pool.extend(world.random.sample(extend_pool, extraitems))
-
-    for extra in diff.extras:
-        if extraitems >= len(extra):
-            pool.extend(extra)
-            extraitems -= len(extra)
-        elif extraitems > 0:
-            pool.extend(world.random.sample(extra, extraitems))
-            break
-        else:
-            break
-
-    if retro:
-        replace = {'Single Arrow', 'Arrows (10)', 'Arrow Upgrade (+5)', 'Arrow Upgrade (+10)'}
-        pool = ['Rupees (5)' if item in replace else item for item in pool]
-
-    if goal == 'pedestal' and swords != 'vanilla':
-        place_item('Master Sword Pedestal', 'Triforce')
-        pool.remove("Rupees (20)")
-
-    return (pool, placed_items, precollected_items, clock_mode, treasure_hunt_count, treasure_hunt_icon,
-            additional_pieces_to_place)
-
-
-def make_custom_item_pool(world, player):
-    shuffle = world.shuffle[player]
-    difficulty = world.difficulty[player]
-    timer = world.timer[player]
-    goal = world.goal[player]
-    mode = world.mode[player]
-    customitemarray = world.customitemarray[player]
-    logging.info('%s', customitemarray)
-
-    pool = []
-    placed_items = {}
-    precollected_items = []
-    clock_mode = None
-    treasure_hunt_count = None
-    treasure_hunt_icon = None
-
-    def place_item(loc, item):
-        assert loc not in placed_items
-        placed_items[loc] = item
-
-    # Correct for insanely oversized item counts and take initial steps to handle undersized pools.
-    for x in range(0, 67):
-        if customitemarray[x] > total_items_to_place:
-            customitemarray[x] = total_items_to_place
-    if customitemarray[68] > total_items_to_place:
-        customitemarray[68] = total_items_to_place
-
-    # count all items, except rupoor cost
-    itemtotal = 0
-    for x in range(0, 67):
-        itemtotal = itemtotal + customitemarray[x]
-    itemtotal = itemtotal + customitemarray[68]
-
-    pool.extend(['Bow'] * customitemarray[0])
-    pool.extend(['Silver Bow'] * customitemarray[1])
-    pool.extend(['Blue Boomerang'] * customitemarray[2])
-    pool.extend(['Red Boomerang'] * customitemarray[3])
-    pool.extend(['Hookshot'] * customitemarray[4])
-    pool.extend(['Mushroom'] * customitemarray[5])
-    pool.extend(['Magic Powder'] * customitemarray[6])
-    pool.extend(['Fire Rod'] * customitemarray[7])
-    pool.extend(['Ice Rod'] * customitemarray[8])
-    pool.extend(['Bombos'] * customitemarray[9])
-    pool.extend(['Ether'] * customitemarray[10])
-    pool.extend(['Quake'] * customitemarray[11])
-    pool.extend(['Lamp'] * customitemarray[12])
-    pool.extend(['Hammer'] * customitemarray[13])
-    pool.extend(['Shovel'] * customitemarray[14])
-    pool.extend(['Flute'] * customitemarray[15])
-    pool.extend(['Bug Catching Net'] * customitemarray[16])
-    pool.extend(['Book of Mudora'] * customitemarray[17])
-    pool.extend(['Cane of Somaria'] * customitemarray[19])
-    pool.extend(['Cane of Byrna'] * customitemarray[20])
-    pool.extend(['Cape'] * customitemarray[21])
-    pool.extend(['Pegasus Boots'] * customitemarray[23])
-    pool.extend(['Power Glove'] * customitemarray[24])
-    pool.extend(['Titans Mitts'] * customitemarray[25])
-    pool.extend(['Progressive Glove'] * customitemarray[26])
-    pool.extend(['Flippers'] * customitemarray[27])
-    pool.extend(['Piece of Heart'] * customitemarray[29])
-    pool.extend(['Boss Heart Container'] * customitemarray[30])
-    pool.extend(['Sanctuary Heart Container'] * customitemarray[31])
-    pool.extend(['Master Sword'] * customitemarray[33])
-    pool.extend(['Tempered Sword'] * customitemarray[34])
-    pool.extend(['Golden Sword'] * customitemarray[35])
-    pool.extend(['Blue Shield'] * customitemarray[37])
-    pool.extend(['Red Shield'] * customitemarray[38])
-    pool.extend(['Mirror Shield'] * customitemarray[39])
-    pool.extend(['Progressive Shield'] * customitemarray[40])
-    pool.extend(['Blue Mail'] * customitemarray[41])
-    pool.extend(['Red Mail'] * customitemarray[42])
-    pool.extend(['Progressive Mail'] * customitemarray[43])
-    pool.extend(['Magic Upgrade (1/2)'] * customitemarray[44])
-    pool.extend(['Magic Upgrade (1/4)'] * customitemarray[45])
-    pool.extend(['Bomb Upgrade (+5)'] * customitemarray[46])
-    pool.extend(['Bomb Upgrade (+10)'] * customitemarray[47])
-    pool.extend(['Arrow Upgrade (+5)'] * customitemarray[48])
-    pool.extend(['Arrow Upgrade (+10)'] * customitemarray[49])
-    pool.extend(['Single Arrow'] * customitemarray[50])
-    pool.extend(['Arrows (10)'] * customitemarray[51])
-    pool.extend(['Single Bomb'] * customitemarray[52])
-    pool.extend(['Bombs (3)'] * customitemarray[53])
-    pool.extend(['Rupee (1)'] * customitemarray[54])
-    pool.extend(['Rupees (5)'] * customitemarray[55])
-    pool.extend(['Rupees (20)'] * customitemarray[56])
-    pool.extend(['Rupees (50)'] * customitemarray[57])
-    pool.extend(['Rupees (100)'] * customitemarray[58])
-    pool.extend(['Rupees (300)'] * customitemarray[59])
-    pool.extend(['Rupoor'] * customitemarray[60])
-    pool.extend(['Blue Clock'] * customitemarray[61])
-    pool.extend(['Green Clock'] * customitemarray[62])
-    pool.extend(['Red Clock'] * customitemarray[63])
-    pool.extend(['Progressive Bow'] * customitemarray[64])
-    pool.extend(['Bombs (10)'] * customitemarray[65])
-    pool.extend(['Triforce'] * customitemarray[68])
-
-    diff = difficulties[difficulty]
-
-    # expert+ difficulties produce the same contents for
-    # all bottles, since only one bottle is available
-    thisbottle = None
-    for _ in range(customitemarray[18]):
-        if not diff.same_bottle or not thisbottle:
-            thisbottle = world.random.choice(diff.bottles)
-        pool.append(thisbottle)
-
-    if "triforce" in world.goal[player]:
-        pool.extend(["Triforce Piece"] * world.triforce_pieces_available[player])
-        itemtotal += world.triforce_pieces_available[player]
-        treasure_hunt_count = world.triforce_pieces_required[player]
-        treasure_hunt_icon = 'Triforce Piece'
-
-    if timer in ['display', 'timed', 'timed-countdown']:
-        clock_mode = 'countdown' if timer == 'timed-countdown' else 'stopwatch'
-    elif timer == 'timed-ohko':
-        clock_mode = 'countdown-ohko'
-    elif timer == 'ohko':
-        clock_mode = 'ohko'
-
-    if goal == 'pedestal':
-        place_item('Master Sword Pedestal', 'Triforce')
-        itemtotal = itemtotal + 1
-
-    if mode == 'standard':
-        if world.keyshuffle[player] == "universal":
-            key_location = world.random.choice(
-                ['Secret Passage', 'Hyrule Castle - Boomerang Chest', 'Hyrule Castle - Map Chest',
-                 'Hyrule Castle - Zelda\'s Chest', 'Sewers - Dark Cross'])
-            place_item(key_location, 'Small Key (Universal)')
-            pool.extend(['Small Key (Universal)'] * max((customitemarray[66] - 1), 0))
-        else:
-            pool.extend(['Small Key (Universal)'] * customitemarray[66])
-    else:
-        pool.extend(['Small Key (Universal)'] * customitemarray[66])
-
-    pool.extend(['Fighter Sword'] * customitemarray[32])
-    pool.extend(['Progressive Sword'] * customitemarray[36])
-
-    if shuffle == 'insanity_legacy':
-        place_item('Link\'s House', 'Magic Mirror')
-        place_item('Sanctuary', 'Moon Pearl')
-        pool.extend(['Magic Mirror'] * max((customitemarray[22] -1 ), 0))
-        pool.extend(['Moon Pearl'] * max((customitemarray[28] - 1), 0))
-    else:
-        pool.extend(['Magic Mirror'] * customitemarray[22])
-        pool.extend(['Moon Pearl'] * customitemarray[28])
-
-    if world.keyshuffle == "universal":
-        itemtotal = itemtotal - 28  # Corrects for small keys not being in item pool in Retro Mode
-    if itemtotal < total_items_to_place:
-        pool.extend(['Nothing'] * (total_items_to_place - itemtotal))
-        logging.warning(f"Pool was filled up with {total_items_to_place - itemtotal} Nothing's for player {player}")
-
-    return (pool, placed_items, precollected_items, clock_mode, treasure_hunt_count, treasure_hunt_icon)
-
-
-# Used exclusively for debugging.
-def fill_specific_items(world):
-    keypool = [item for item in world.itempool if item.smallkey]
-    cage = world.get_location('Tower of Hera - Basement Cage', 1)
-    c_dungeon = cage.parent_region.dungeon
-    key_item = next(x for x in keypool if c_dungeon.name in x.name or (c_dungeon.name == 'Hyrule Castle' and 'Escape' in x.name))
-    world.itempool.remove(key_item)
-    all_state = world.get_all_state(True)
-    fill_restrictive(world, all_state, [cage], [key_item])
-
-    location = world.get_location('Tower of Hera - Map Chest', 1)
-    key_item = next(x for x in world.itempool if 'Byrna' in x.name)
-    world.itempool.remove(key_item)
-    fast_fill(world, [key_item], [location])
-
-    # somaria = next(item for item in world.itempool if item.name == 'Cane of Somaria')
-    # shooter = world.get_location('Palace of Darkness - Shooter Room', 1)
-    # world.itempool.remove(somaria)
-    # all_state = world.get_all_state(True)
-    # fill_restrictive(world, all_state, [shooter], [somaria])
-
-

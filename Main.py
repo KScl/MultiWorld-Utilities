@@ -24,7 +24,7 @@ from RoomData import create_rooms
 from Rules import set_rules
 from Dungeons import create_dungeons, fill_dungeons, fill_dungeons_restrictive, dungeon_regions
 from Fill import distribute_items_restrictive, flood_items, balance_multiworld_progression, distribute_planned
-from ItemPool import generate_itempool, difficulties, fill_prizes, fill_specific_items
+from ItemPool import generate_itempool, difficulties, fill_prizes
 from Utils import output_path, parse_player_names, get_options, __version__, _version_tuple, print_wiki_doors_by_region, print_wiki_doors_by_room
 from typing import Dict
 from source.classes.BabelFish import BabelFish
