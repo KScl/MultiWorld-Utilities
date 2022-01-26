@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 JPN10HASH = '03a63945398191337e896e5771f77173'
-RANDOMIZERBASEHASH = '25dd7a66a41db2ba37fc68c8da387205'
+RANDOMIZERBASEHASH = 'd074e178c20ab955586dec0a49cb556b'
 
 import io
 import itertools
@@ -297,7 +297,7 @@ def apply_random_sprite_on_event(rom: LocalRom, sprite, local_random, allow_rand
     # we only have room for one so we just use whatever the starting sprite was
     padded_author = sprite.author_name if sprite is not None else "Nintendo"
     padded_author = padded_author[:28] if len(padded_author) > 28 else padded_author
-    write_to_credits(rom, 0x118002, padded_author.center(28))
+    write_to_credits(rom, 0x11F002, padded_author.center(28))
 
 
 def patch_enemizer(world, team: int, player: int, rom: LocalRom, enemizercli):
@@ -756,6 +756,9 @@ bonk_addresses = [0x4CF6C, 0x4CFBA, 0x4CFE0, 0x4CFFB, 0x4D018, 0x4D01B, 0x4D028,
 def patch_rom(world, rom, player, team, enemized, is_mystery=False):
     local_random = world.rom_seeds[player]
 
+    # extra stats to show in credits, in order from top to bottom
+    extra_credits_stats = []
+
     # progressive bow silver arrow hint hack
     prog_bow_locs = world.find_items('Progressive Bow', player)
     if len(prog_bow_locs) > 1:
@@ -1007,15 +1010,18 @@ def patch_rom(world, rom, player, team, enemized, is_mystery=False):
 
     write_custom_shops(rom, world, player)
 
+    gt_big_key_count = 22
     if world.keydropshuffle[player] or world.doorShuffle[player] != 'vanilla':
         gt = world.dungeon_layouts[player]['Ganons Tower']
         gt_logic = world.key_logic[player]['Ganons Tower']
-        total = 0
+        gt_big_key_count = 0
         for region in gt.master_sector.regions:
-            total += count_locations_exclude_logic(region.locations, gt_logic)
-        rom.write_byte(0x187012, total)  # dynamic credits
-        write_to_credits(rom, 0x118058, "%2d" % total) # see top of creditsnew.asm
-
+            gt_big_key_count += count_locations_exclude_logic(region.locations, gt_logic)
+        rom.write_byte(0x187012, gt_big_key_count)  # dynamic credits
+    # GT stat only shown in non-big key shuffled modes
+    if not world.bigkeyshuffle[player]:
+        extra_credits_stats.append(CreditsStat("GT BIG KEY", 0x7EF42A, bitsize=5, digits=2, total=gt_big_key_count))
+ 
     credits_total = 216
     if world.retro[player]:  # Old man cave and Take any caves will count towards collection rate.
         credits_total += 5
@@ -1026,7 +1032,7 @@ def patch_rom(world, rom, player, team, enemized, is_mystery=False):
         rom.write_byte(0x140000, 1)
 
     rom.write_bytes(0x187010, int16_as_bytes(credits_total))  # dynamic credits
-    write_to_credits(rom, 0x118093, "%3d" % credits_total)
+    write_to_credits(rom, 0x11F057, "%3d" % credits_total) # see stats/customtext.asm
 
     # patch medallion requirements
     if world.required_medallions[player][0] == 'Bombos':
@@ -1820,7 +1826,22 @@ def patch_rom(world, rom, player, team, enemized, is_mystery=False):
         rom.write_byte(0x4BA1D, tile_set.get_len())
         rom.write_bytes(0x4BA2A, tile_set.get_bytes())
 
+    # -------------------------------------------------------------------------
+    # Add interesting mode specific stats to credits
+    # -------------------------------------------------------------------------
+    # Note: GT Big Key is conditionally added when calculated earlier
+    if world.mode[player] == 'standard':
+        extra_credits_stats.append(CreditsStat("ESCAPE TIME", 0x7EF498, bitsize='timer'))
+    if world.clock_mode[player] in ['countdown-ohko']:
+        extra_credits_stats.append(CreditsStat("TIME IN OHKO", 0x7EF49C, bitsize='timer'))
+    if world.shop_shuffle_slots[player] or world.retro[player]:
+        extra_credits_stats.append(CreditsStat("RUPEES SPENT", 0x7EF42B))
+    if world.keyshuffle[player] in ['universal']:
+        extra_credits_stats.append(CreditsStat("KEYS USED", 0x7EF46F))
+    # -------------------------------------------------------------------------
+
     write_strings(rom, world, player, team)
+    write_credits_stats(rom, extra_credits_stats)
 
     rom.write_byte(0x18637C, 1 if world.remote_items[player] else 0)
 
@@ -3208,6 +3229,33 @@ def write_pots_to_rom(rom, pot_contents):
             rom.write_int16(pot_item_room_table_lookup + 2*i, n-2)
     assert n <= pot_item_table_end
 
+
+class CreditsStat():
+    def __init__(self, description, address, bitsize=16, bitshift=0, digits=4, total=None):
+        self.is_timer = True if bitsize=='timer' else False
+        self.x = 25 if total is None else 25 - len("/%d" % total)
+        self.total = None if self.is_timer else total
+        self.bitsize = 0 if self.is_timer else bitsize
+        self.bitshift = 0 if self.is_timer else bitshift
+        self.digits = 0 if self.is_timer else digits
+        self.address = int(address)
+        self.description = description
+
+    def get_text(self):
+        stat_total = ('/%d' % self.total if self.total else '').rjust(28)
+        return self.description + stat_total[len(self.description):]
+
+    def get_config(self, line_num):
+        byte_value = []
+        byte_value.append((0x9A if self.is_timer else self.x << 3) | (1 if line_num > 255 else 0))
+        byte_value.append(line_num & 0xFF)
+        byte_value.append((self.bitsize & 0xF) << 4 | (self.bitshift & 0xF))
+        byte_value.append(self.digits << 5)
+        byte_value.append(0x00)
+        byte_value.extend(self.address.to_bytes(3, 'little'))
+        return byte_value
+
+
 # Writes text to the credits in a specific location
 # We have a few things (sprite credit, check count) that we need to update on the fly
 def write_to_credits(rom, address, text):
@@ -3228,3 +3276,21 @@ def write_to_credits(rom, address, text):
 
     rom.write_bytes(address,      [char_map_hi.get(symbol, 0x9F) for symbol in text.upper()])
     rom.write_bytes(address+0x1E, [char_map_lo.get(symbol, 0x9F) for symbol in text.upper()])
+
+def write_credits_stats(rom, credits_stats):
+    rom_credits_table = 0x11F898
+    rom_text_table = 0x11F07A
+    credit_line = 357
+
+    credits_stats = credits_stats[0:3]
+    if len(credits_stats) == 0:
+        write_to_credits(rom, rom_text_table, "NOTHING TO SHOW".center(28))
+        return
+
+    for stat in credits_stats:
+        write_to_credits(rom, rom_text_table, stat.get_text())
+        rom.write_bytes(rom_credits_table, stat.get_config(credit_line))
+
+        rom_credits_table += 0x8
+        rom_text_table += (0x1E * 2)
+        credit_line += 3
