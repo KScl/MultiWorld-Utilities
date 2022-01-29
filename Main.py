@@ -10,7 +10,7 @@ import zlib
 import concurrent.futures
 
 from BaseClasses import World, CollectionState, Item, Region, Location, Entrance
-from Shops import ShopSlotFill, create_shops, SHOP_ID_START, FillDisabledShopSlots, total_shop_slots
+from Shops import ShopType, ShopSlotFill, create_shops, SHOP_ID_START, FillDisabledShopSlots, total_shop_slots, shop_table_by_location
 from Items import ItemFactory, item_table, item_name_groups
 from KeyDoorShuffle import validate_key_placement
 from PotShuffle import shuffle_pots
@@ -544,12 +544,19 @@ def main(args, seed=None, fish=None):
             checks_in_area[location.player]["Total"] += 1
 
         oldmancaves = []
-        takeanyregions = ["Old Man Sword Cave", "Take-Any #1", "Take-Any #2", "Take-Any #3", "Take-Any #4"]
-        for index, take_any in enumerate(takeanyregions):
-            for region in [world.get_region(take_any, player) for player in range(1, world.players + 1) if world.retro[player]]:
-                item = ItemFactory(region.shop.inventory[(0 if take_any == "Old Man Sword Cave" else 1)]['item'], region.player)
-                player = region.player
-                location_id = SHOP_ID_START + total_shop_slots + index
+        for player in range(1, world.players + 1):
+            if world.retro[player] not in ['enhanced', 'classic']:
+                continue
+
+            new_region_names = ["Take-Any #1", "Take-Any #2", "Take-Any #3", "Take-Any #4", "Old Man Sword Cave"]
+            if world.retro[player] == 'enhanced':
+                new_region_names.extend(["Master Sword Cave", "Tempered Sword Cave", "Golden Sword Cave", "Rupee Hoard #1", "Rupee Hoard #2"])
+
+
+            for index, take_any in enumerate(new_region_names):
+                region = world.get_region(take_any, player)
+                item = ItemFactory(region.shop.inventory[0]['item'], region.player)
+                location_id = shop_table_by_location[take_any]
 
                 main_entrance = get_entrance_to_region(region, [])
                 if main_entrance.parent_region.type == RegionType.LightWorld:
@@ -762,8 +769,10 @@ def copy_world(world):
         if location.locked:
             new_location.locked = True
         # these need to be modified properly by set_rules
-        new_location.access_rule = lambda state: True
-        new_location.item_rule = lambda state: True
+        # this seems like a bad idea but otherwise dynamic locations aren't handled properly
+        if location not in world.dynamic_locations:
+            new_location.access_rule = lambda state: True
+            new_location.item_rule = lambda state: True
 
     # copy remaining itempool. No item in itempool should have an assigned location
     for item in world.itempool:
@@ -807,8 +816,13 @@ def copy_dynamic_regions_and_locations(world, ret):
         # Note: ideally exits should be copied here, but the current use case (Take anys) do not require this
 
         if region.shop:
-            new_reg.shop = region.shop.__class__(new_reg, region.shop.room_id, region.shop.shopkeeper_config,
-                                                 region.shop.custom, region.shop.locked, region.shop.sram_offset)
+            new_reg_shop = None
+            if region.shop.type == ShopType.TakeAny:
+                new_reg.shop = region.shop.__class__(new_reg, region.shop.room_id, region.shop.shopkeeper_config,
+                                                     region.shop.sram_offset, is_sword_cave=region.shop.is_sword_cave)
+            else:
+                new_reg.shop = region.shop.__class__(new_reg, region.shop.room_id, region.shop.shopkeeper_config,
+                                                     region.shop.custom, region.shop.locked, region.shop.sram_offset)
             ret.shops.append(new_reg.shop)
 
     for location in world.dynamic_locations:

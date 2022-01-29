@@ -618,12 +618,20 @@ def roll_settings(weights: dict, plando_options: typing.Set[str] = frozenset(("b
         ret.shop_shuffle = ''
 
     ret.mode = get_choice('world_state', weights, None)  # legacy support
+    ret.retro = None
     if ret.mode == 'retro':
         ret.mode = 'open'
-        ret.retro = True
+        ret.retro = 'classic'
     elif ret.mode is None:
         ret.mode = get_choice("mode", weights)
-        ret.retro = get_choice("retro", weights)
+
+    if ret.retro == None:
+        ret.retro = {False: False,
+                     None: False,
+                     True: 'classic',
+                     'classic': 'classic',
+                     'enhanced': 'enhanced'
+                     }[get_choice("retro", weights)]
 
     ret.hints = get_choice('hints', weights)
 

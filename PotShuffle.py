@@ -304,8 +304,10 @@ def shuffle_pots(world, player):
 
             new_pot = world.random.choice(available_pots)
             new_pot.item = old_pot.item
-            if world.retro[player] and new_pot.item == PotItem.FiveArrows:
-                new_pot.item = PotItem.FiveRupees
+
+            # Retro changes pot drops already to make this a non-issue
+            #if world.retro[player] and new_pot.item == PotItem.FiveArrows:
+            #    new_pot.item = PotItem.FiveRupees
 
             if new_pot.item == PotItem.Key and new_pot.room != old_pot.room:
                 # Move pot key to new room

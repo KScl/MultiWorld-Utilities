@@ -49,6 +49,7 @@ class Shop():
             door_id = 0
             config |= 0x40  # ignore door id
         if self.type == ShopType.TakeAny:
+            config |= 0x08 if self.is_sword_cave else 0x00 # Flag for extended retro
             config |= 0x80
         elif self.type == ShopType.UpgradeShop:
             config |= 0x10  # Alt. VRAM
@@ -115,6 +116,10 @@ class Shop():
 
 class TakeAny(Shop):
     type = ShopType.TakeAny
+
+    def __init__(self, region, room_id: int, shopkeeper_config: int, sram_offset: int, is_sword_cave: bool = False):
+        super().__init__(region, room_id, shopkeeper_config, True, True, sram_offset)
+        self.is_sword_cave = is_sword_cave
 
 
 class UpgradeShop(Shop):
@@ -273,7 +278,7 @@ def create_shops(world, player: int):
         # make sure that blue potion is available in inverted, special case locked = None; lock when done.
         player_shop_table["Dark Lake Hylia Shop"] = \
             player_shop_table["Dark Lake Hylia Shop"]._replace(items=_inverted_hylia_shop_defaults, locked=None)
-    chance_100 = int(world.retro[player])*0.25+int(world.keyshuffle[player] == "universal") * 0.5
+    chance_100 = int(bool(world.retro[player]))*0.25+int(world.keyshuffle[player] == "universal") * 0.5
     for region_name, (room_id, type, shopkeeper, custom, locked, inventory, sram_offset) in player_shop_table.items():
         region = world.get_region(region_name, player)
         shop: Shop = shop_class_mapping[type](region, room_id, shopkeeper, custom, locked, sram_offset)
@@ -352,6 +357,11 @@ shop_table_by_location_id[(SHOP_ID_START + total_shop_slots + 1)] = "Take-Any #1
 shop_table_by_location_id[(SHOP_ID_START + total_shop_slots + 2)] = "Take-Any #2"
 shop_table_by_location_id[(SHOP_ID_START + total_shop_slots + 3)] = "Take-Any #3"
 shop_table_by_location_id[(SHOP_ID_START + total_shop_slots + 4)] = "Take-Any #4"
+shop_table_by_location_id[(SHOP_ID_START + total_shop_slots + 5)] = "Master Sword Cave"
+shop_table_by_location_id[(SHOP_ID_START + total_shop_slots + 6)] = "Tempered Sword Cave"
+shop_table_by_location_id[(SHOP_ID_START + total_shop_slots + 7)] = "Golden Sword Cave"
+shop_table_by_location_id[(SHOP_ID_START + total_shop_slots + 8)] = "Rupee Hoard #1"
+shop_table_by_location_id[(SHOP_ID_START + total_shop_slots + 9)] = "Rupee Hoard #2"
 shop_table_by_location = {y: x for x, y in shop_table_by_location_id.items()}
 
 shop_generation_types = {
@@ -367,6 +377,7 @@ shop_generation_types = {
 
 def set_up_shops(world, player: int):
     # TODO: move hard+ mode changes for shields here, utilizing the new shops
+    unlocked_shops = [s for s in world.shops if s.custom and not s.locked and s.type == ShopType.Shop and s.region.player == player]
 
     if world.retro[player]:
         rss = world.get_region('Red Shield Shop', player).shop
@@ -379,9 +390,7 @@ def set_up_shops(world, player: int):
         rss.locked = True
 
     if world.keyshuffle[player] == "universal" or world.retro[player]:
-        for shop in world.random.sample([s for s in world.shops if
-                                         s.custom and not s.locked and s.type == ShopType.Shop and s.region.player == player],
-                                        5):
+        for shop in world.random.sample(unlocked_shops, 5):
             shop.locked = True
             slots = [0, 1, 2]
             world.random.shuffle(slots)
@@ -390,6 +399,20 @@ def set_up_shops(world, player: int):
                 shop.add_inventory(next(slots), 'Small Key (Universal)', 100)
             if world.retro[player]:
                 shop.push_inventory(next(slots), 'Single Arrow', 80)
+
+    # Halve all prices by default in enhanced retro. (This is a test.)
+    #if world.retro[player] in ['enhanced']:
+    #    inventory = []
+    #    for shop in unlocked_shops:
+    #        inventory.extend(shop.inventory)
+    #
+    #    for item in inventory:            
+    #        if not item:
+    #            continue
+    #        if item["price"] > 1:
+    #            item["price"] >>= 1
+    #        if item['replacement_price'] > 1:
+    #            item['replacement_price'] >>= 1
 
 
 def shuffle_shops(world, items, player: int):

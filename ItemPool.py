@@ -481,16 +481,53 @@ def generate_itempool(world, player: int):
     else:
         world.itempool.extend([item for item in dungeon_items])
 
+    # -------------------------------------------------------------------------
     # logic has some branches where having 4 hearts is one possible requirement (of several alternatives)
     # rather than making all hearts/heart pieces progression items (which slows down generation considerably)
-    # We mark one random heart container as an advancement item (or 4 heart pieces if none present, e.g. in expert mode)
-    adv_hearts = [('Boss Heart Container', 1), ('Piece of Heart', 4), ('Sanctuary Heart Container', 1)]
-    for (adv_item, adv_required) in adv_hearts:
-        adv_items = [item for item in items if item.name == adv_item]
+    # we pick random heart container/piece types and mark them as advancements until we have enough
+    boss_hearts_left = difficulties[world.difficulty[player]].boss_heart_container_limit
+    heart_pieces_left = difficulties[world.difficulty[player]].heart_piece_limit
+    advancements_required = 1
+
+    # enhanced retro requires 6 heart containers for Master Sword, 10 for Tempered and 16 for Golden
+    # we assume Tempered and Golden can be reached if Master Sword was, but we need three progression hearts
+    # instead of just one so we can get to that point
+    if world.retro[player] == 'enhanced':
+        advancements_required = 3
+
+    adv_hearts = {'Boss Heart Container': 1, 'Piece of Heart': 4, 'Sanctuary Heart Container': 1}
+    adv_hearts_weight = [
+        # 70% chance of being regular heart, 20% of being pieces, 10% of being Sanc Heart
+        'Boss Heart Container', 'Boss Heart Container', 'Boss Heart Container',
+        'Boss Heart Container', 'Boss Heart Container', 'Boss Heart Container',
+        'Boss Heart Container', 'Piece of Heart', 'Piece of Heart',
+        'Sanctuary Heart Container'
+    ]
+    while advancements_required:
+        if len(adv_hearts_weight) == 0:
+            break # No hearts left, hope it's enough
+
+        # Get a random type of heart and try to mark it as advancement.
+        chosen_heart = world.random.choice(adv_hearts_weight)
+        adv_items = [item for item in items if item.name == chosen_heart and not item.advancement]
+        adv_required = adv_hearts[chosen_heart]
+
         if len(adv_items) >= adv_required:
             for i in range(adv_required):
                 adv_items[i].advancement = True
-            break
+            advancements_required -= 1
+            # Account for difficulty requirements -- we can't mark more of a type of heart for advancement
+            # than we're allowed to get in the first place with the difficulty pool setting
+            if chosen_heart == 'Boss Heart Container':
+                boss_hearts_left -= 1
+                adv_hearts_weight = [i for i in adv_hearts_weight if i != chosen_heart] if not boss_hearts_left else adv_hearts_weight
+            elif chosen_heart == 'Piece of Heart':
+                heart_pieces_left -= 4
+                adv_hearts_weight = [i for i in adv_hearts_weight if i != chosen_heart] if not heart_pieces_left else adv_hearts_weight
+
+        else: # Not enough exist, remove from future consideration
+            adv_hearts_weight = [i for i in adv_hearts_weight if i != chosen_heart]
+    # -------------------------------------------------------------------------
 
     progressionitems = []
     nonprogressionitems = []
@@ -530,76 +567,222 @@ def generate_itempool(world, player: int):
 
     world.itempool += progressionitems + nonprogressionitems
 
-    if world.retro[player]:
-        set_up_take_anys(world, player)  # depends on world.itempool to be set
+    if world.retro[player] == 'enhanced':
+        set_up_retro_enhanced(world, player) # depends on world.itempool to be set
+    elif world.retro[player] == 'classic':
+        set_up_retro_classic(world, player) # depends on world.itempool to be set
 
     if world.keyshuffle[player] == "universal" and world.keydropshuffle[player]:
         world.itempool += [ItemFactory('Small Key (Universal)', player)] * 32
 
+# =============================================================================
+# Retro Mode
+# -----------------------------------------------------------------------------
+retro_room_setups = {
+    'cave': (0x58, 0x112),
+    'house': (0x60, 0x010F),
+    'small_house': (0x46, 0x011F)
+}
 
-take_any_locations = {
-    'Snitch Lady (East)', 'Snitch Lady (West)', 'Bush Covered House', 'Light World Bomb Hut',
-    'Fortune Teller (Light)', 'Lake Hylia Fortune Teller', 'Lumberjack House', 'Bonk Fairy (Light)',
-    'Bonk Fairy (Dark)', 'Lake Hylia Healer Fairy', 'Swamp Healer Fairy', 'Desert Healer Fairy',
-    'Dark Lake Hylia Healer Fairy', 'Dark Lake Hylia Ledge Healer Fairy', 'Dark Desert Healer Fairy',
-    'Dark Death Mountain Healer Fairy', 'Long Fairy Cave', 'Good Bee Cave', '20 Rupee Cave',
-    'Kakariko Gamble Game', '50 Rupee Cave', 'Lost Woods Gamble', 'Hookshot Fairy',
-    'Palace of Darkness Hint', 'East Dark World Hint', 'Archery Game', 'Dark Lake Hylia Ledge Hint',
-    'Dark Lake Hylia Ledge Spike Cave', 'Fortune Teller (Dark)', 'Dark Sanctuary Hint', 'Dark Desert Hint'}
+retro_regions_to_replace = {
+    'Bonk Fairy (Light)': 'cave',
+    'Bonk Fairy (Dark)': 'cave',
+    'Lake Hylia Healer Fairy': 'cave',
+    'Swamp Healer Fairy': 'cave',
+    'Desert Healer Fairy': 'cave',
+    'Dark Lake Hylia Healer Fairy': 'cave',
+    'Dark Lake Hylia Ledge Healer Fairy': 'cave',
+    'Dark Desert Healer Fairy': 'cave',
+    'Dark Death Mountain Healer Fairy': 'cave',
+    'Long Fairy Cave': 'cave',
+    'Good Bee Cave': 'cave',
+    '20 Rupee Cave': 'cave',
+    '50 Rupee Cave': 'cave',
+    'Hookshot Fairy': 'cave',
+    'East Dark World Hint': 'cave',
+    'Dark Lake Hylia Ledge Hint': 'cave',
+    'Dark Lake Hylia Ledge Spike Cave': 'cave',
+    'Dark Sanctuary Hint': 'cave',
+    'Dark Desert Hint': 'cave',
 
-take_any_locations_inverted = list(take_any_locations - {"Dark Sanctuary Hint", "Archery Game"})
-take_any_locations = list(take_any_locations)
-# sets are sorted by the element's hash, python's hash is seeded at startup, resulting in different sorting each run
-take_any_locations_inverted.sort()
-take_any_locations.sort()
+    'Snitch Lady (East)': 'house',
+    'Snitch Lady (West)': 'house',
+    'Lumberjack House': 'house',
+    'Kakariko Gamble Game': 'house',
+    'Lost Woods Gamble': 'house',
+    'Archery Game': 'house',
 
+    'Bush Covered House': 'small_house',
+    'Light World Bomb Hut': 'small_house',
+    'Fortune Teller (Light)': 'small_house',
+    'Lake Hylia Fortune Teller': 'small_house',
+    'Palace of Darkness Hint': 'small_house',
+    'Fortune Teller (Dark)': 'small_house',
+}
 
-def set_up_take_anys(world, player):
-    # these are references, do not modify these lists in-place
+retro_new_region_info = {
+    # classic retro
+    'Old Man Sword Cave': ('a sword cave', 0xA2, 0),
+    'Take-Any #1': ('a cave of choice', 0xA3, 1),
+    'Take-Any #2': ('a cave of choice', 0x83, 2),
+    'Take-Any #3': ('a cave of choice', 0x63, 3),
+    'Take-Any #4': ('a cave of choice', 0xC3, 4),
+    # enhanced retro
+    'Master Sword Cave':   ('a sword cave', 0x82, 5),
+    'Tempered Sword Cave': ('a sword cave', 0x62, 6),
+    'Golden Sword Cave':   ('a sword cave', 0xC2, 7),
+    'Rupee Hoard #1': ('a secret to everyone', 0x81, 8),
+    'Rupee Hoard #2': ('a secret to everyone', 0x81, 9)
+    # I think this doesn't cause any problems with SRAM...
+}
+
+def make_retro_connection(world, player, new_region_name, old_region_name, sword_cave=False):
+    hint, config, region_id = retro_new_region_info[new_region_name]
+    room_type = retro_regions_to_replace[old_region_name]
+
+    new_region = Region(new_region_name, RegionType.Cave, hint, player)
+    world.regions.append(new_region)
+    world.dynamic_regions.append(new_region)
+
+    entrance = world.get_region(old_region_name, player).entrances[0]
+    connect_entrance(world, entrance.name, new_region.name, player)
+    target, room_id = retro_room_setups[room_type]
+    entrance.target = target
+    new_region.shop = TakeAny(new_region, room_id, config, total_shop_slots + region_id, is_sword_cave=sword_cave)
+    world.shops.append(new_region.shop)
+
+    return new_region
+
+# -----------------------------------------------------------------------------
+# Sets up Take Any, etc. caves for enhanced Retro
+# -----------------------------------------------------------------------------
+def set_up_retro_enhanced(world, player):
+    take_any_locs = list(retro_regions_to_replace.keys())
+    take_any_locs.remove('20 Rupee Cave') # forced to be a secret cave
+    take_any_locs.remove('50 Rupee Cave') # forced to be a secret cave
+    take_any_locs.remove('Good Bee Cave') # so good bees can remain available
+    take_any_locs.remove('Archery Game') # needs a source of income
     if world.mode[player] == 'inverted':
-        take_any_locs = take_any_locations_inverted
-    else:
-        take_any_locs = take_any_locations
+        take_any_locs.remove('Dark Sanctuary Hint') # player starts there
+    world.random.shuffle(take_any_locs)
 
-    regions = world.random.sample(take_any_locs, 5)
+    sword_take_any = [
+        make_retro_connection(world, player, "Old Man Sword Cave",  take_any_locs.pop(), sword_cave = True),
+        make_retro_connection(world, player, 'Master Sword Cave',   take_any_locs.pop(), sword_cave = True),
+        make_retro_connection(world, player, 'Tempered Sword Cave', take_any_locs.pop(), sword_cave = True),
+        make_retro_connection(world, player, 'Golden Sword Cave',   take_any_locs.pop(), sword_cave = True)
+    ]
+    regular_take_any = [
+        make_retro_connection(world, player, "Take-Any #1", take_any_locs.pop()),
+        make_retro_connection(world, player, "Take-Any #2", take_any_locs.pop()),
+        make_retro_connection(world, player, "Take-Any #3", take_any_locs.pop()),
+        make_retro_connection(world, player, "Take-Any #4", take_any_locs.pop())
+    ]
+    secret_take_any = [
+        make_retro_connection(world, player, "Rupee Hoard #1", '20 Rupee Cave', 'cave'),
+        make_retro_connection(world, player, "Rupee Hoard #2", '50 Rupee Cave', 'cave')
+    ]
+    swords_placed = {}
 
-    old_man_take_any = Region("Old Man Sword Cave", RegionType.Cave, 'the sword cave', player)
-    world.regions.append(old_man_take_any)
-    world.dynamic_regions.append(old_man_take_any)
+    def add_sword_to_cave(index, sword_name):
+        swords_available = [item for item in world.itempool if item.name in [sword_name, 'Progressive Sword'] and item.player == player]
+        if len(swords_available) == 0:
+            sword_take_any[index].shop.add_inventory(0, 'Rupees (100)', 0, 0)
+            swords_placed[index] = None
+        else:
+            sword = swords_available.pop()
+            sword_take_any[index].shop.add_inventory(0, sword.name, 0, 0)
+            swords_placed[index] = sword
+            world.itempool.remove(sword)
+            world.itempool.append(ItemFactory('Rupees (5)', player))
 
-    reg = regions.pop()
-    entrance = world.get_region(reg, player).entrances[0]
-    connect_entrance(world, entrance.name, old_man_take_any.name, player)
-    entrance.target = 0x58
-    old_man_take_any.shop = TakeAny(old_man_take_any, 0x0112, 0xE2, True, True, total_shop_slots)
-    world.shops.append(old_man_take_any.shop)
+    add_sword_to_cave(0, "Fighter Sword")
+    add_sword_to_cave(1, "Master Sword")
+    add_sword_to_cave(2, "Tempered Sword")
+    add_sword_to_cave(3, "Golden Sword")
+
+    # Remove all other swords!
+    for sword in [item for item in world.itempool if item.type == 'Sword' and item.player == player]:
+        world.itempool.remove(sword)
+
+    for take_any in regular_take_any:
+        take_any.shop.add_inventory(0, 'Bottle (Blue Potion)', 0, 0)
+        take_any.shop.add_inventory(1, 'Boss Heart Container', 0, 0)
+
+    for take_any in secret_take_any:
+        take_any.shop.add_inventory(0, 'Rupees (300)', 0, 0)
+
+    world.initialize_regions()
+
+    cave_access = [
+        lambda state: True, # Fighter Sword (free)
+        lambda state: state.has_hearts(player, 6), # Master Sword (actually checked)
+        lambda state: state.has('Master Sword', player), # Tempered Sword (assumed)
+        lambda state: state.has('Tempered Sword', player) # Golden Sword (assumed)
+    ]
+    cave_prog_access = [
+        # We assume the Fighter Sword is the first location that they'll reach.
+        # This probably won't actually be the case, but that's irrelevant.
+        lambda state: True, # Fighter Sword (free)
+        lambda state: state.has_hearts(player, 6), # Master Sword (actually checked)
+        lambda state: state.has_hearts(player, 6), # Tempered Sword (assumed)
+        lambda state: state.has_hearts(player, 6) # Golden Sword (assumed)
+    ]
+
+    for index, take_any in enumerate(sword_take_any):
+        if not swords_placed[index]:
+            continue # No sword here
+
+        loc = Location(player, take_any.name, parent=take_any)
+        loc.access_rule = cave_prog_access[index] if swords_placed[index].name == 'Progressive Sword' else cave_access[index]
+        take_any.locations.append(loc)
+        world.dynamic_locations.append(loc)
+
+        world.clear_location_cache()
+        world.push_item(loc, swords_placed[index], False)
+        loc.event = True
+        loc.locked = True
+
+    # Can't think of a better place to put these
+    world.rupee_limit[player] = 255
+    world.zora_cost[player] = 250
+
+# -----------------------------------------------------------------------------
+# Classic Retro mode (old style)
+# -----------------------------------------------------------------------------
+def set_up_retro_classic(world, player):
+    take_any_locs = list(retro_regions_to_replace.keys())
+    if world.mode[player] == 'inverted':
+        take_any_locs.remove('Dark Sanctuary Hint') # player starts there
+        take_any_locs.remove('Archery Game') # needs a source of income
+    world.random.shuffle(take_any_locs)
+
+    old_man_take_any = make_retro_connection(world, player, 'Old Man Sword Cave', take_any_locs.pop())
+    regular_take_any = [
+        make_retro_connection(world, player, "Take-Any #1", take_any_locs.pop()),
+        make_retro_connection(world, player, "Take-Any #2", take_any_locs.pop()),
+        make_retro_connection(world, player, "Take-Any #3", take_any_locs.pop()),
+        make_retro_connection(world, player, "Take-Any #4", take_any_locs.pop())
+    ]
 
     swords = [item for item in world.itempool if item.type == 'Sword' and item.player == player]
     if swords:
         sword = world.random.choice(swords)
         world.itempool.remove(sword)
         world.itempool.append(ItemFactory('Rupees (20)', player))
-        old_man_take_any.shop.add_inventory(0, sword.name, 0, 0, create_location=True)
+        old_man_take_any.shop.add_inventory(0, sword.name, 0, 0)
+        # No location is made for the sword so technically, it's completely out of logic
+        # Previous code attempted to make a location for the sword cave, but it failed
+        # as the code that would set up dynamic locations has already run.
     else:
         old_man_take_any.shop.add_inventory(0, 'Rupees (300)', 0, 0)
 
-    for num in range(4):
-        take_any = Region("Take-Any #{}".format(num+1), RegionType.Cave, 'a cave of choice', player)
-        world.regions.append(take_any)
-        world.dynamic_regions.append(take_any)
-
-        target, room_id = world.random.choice([(0x58, 0x0112), (0x60, 0x010F), (0x46, 0x011F)])
-        reg = regions.pop()
-        entrance = world.get_region(reg, player).entrances[0]
-        connect_entrance(world, entrance.name, take_any.name, player)
-        entrance.target = target
-        take_any.shop = TakeAny(take_any, room_id, 0xE3, True, True, total_shop_slots + num + 1)
-        world.shops.append(take_any.shop)
+    for take_any in regular_take_any:
         take_any.shop.add_inventory(0, 'Blue Potion', 0, 0)
         take_any.shop.add_inventory(1, 'Boss Heart Container', 0, 0)
 
     world.initialize_regions()
-
+# -----------------------------------------------------------------------------
 
 def create_dynamic_shop_locations(world, player):
     for shop in world.shops:
@@ -693,13 +876,23 @@ def get_pool_core(world, player: int):
 
     pool.extend(diff.baseitems)
 
-    # expert+ difficulties produce the same contents for
-    # all bottles, since only one bottle is available
-    thisbottle = None
-    for _ in range(diff.bottle_count):
-        if not diff.same_bottle or not thisbottle:
-            thisbottle = world.random.choice(diff.bottles)
-        pool.append(thisbottle)
+    if retro in ['enhanced']:
+        # All bottles are forced to be blue potions.
+        # Only one is in the item pool. The rest must be obtained from take-anys.
+        pool.append('Bottle (Blue Potion)')
+        pool.extend(['Rupees (5)'] * 3)
+        # Hacked up kludge, change this later.
+        if difficulty == 'normal':
+            [pool.remove('Boss Heart Container') for i in range(4)]
+            pool.extend(['Rupees (5)'] * 4)
+    else:
+        # expert+ difficulties produce the same contents for
+        # all bottles, since only one bottle is available
+        thisbottle = None
+        for _ in range(diff.bottle_count):
+            if not diff.same_bottle or not thisbottle:
+                thisbottle = world.random.choice(diff.bottles)
+            pool.append(thisbottle)
 
     pool.extend(diff.progressiveshield if world.want_progressives(player, 'shield') else diff.basicshield)
     pool.extend(diff.progressivearmor if world.want_progressives(player, 'armor') else diff.basicarmor)
@@ -845,7 +1038,7 @@ def get_pool_core(world, player: int):
         else:
             break
 
-    if retro:
+    if retro in ['classic', 'enhanced']:
         replace = {'Single Arrow', 'Arrows (10)', 'Arrow Upgrade (+5)', 'Arrow Upgrade (+10)'}
         pool = ['Rupees (5)' if item in replace else item for item in pool]
 

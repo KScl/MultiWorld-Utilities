@@ -104,7 +104,7 @@ class World(object):
             # If World State is Retro, set to Open and set Retro flag
             if self.mode[player] == "retro":
                 self.mode[player] = "open"
-                self.retro[player] = True
+                self.retro[player] = "classic"
             def set_player_attr(attr, val):
                 self.__dict__.setdefault(attr, {})[player] = val
             set_player_attr('_region_cache', {})
@@ -861,7 +861,7 @@ class CollectionState(object):
                 or (self.has('Bombs (10)', player) and enemies < 6))
 
     def can_shoot_arrows(self, player: int) -> bool:
-        if self.world.retro[player]:
+        if self.world.retro[player] in ["classic", "enhanced"]:
             return (self.has('Bow', player) or self.has('Silver Bow', player)) and self.can_buy('Single Arrow', player)
         return self.has('Bow', player) or self.has('Silver Bow', player)
 
@@ -871,7 +871,7 @@ class CollectionState(object):
                 or self.world.difficulty_requirements[player].progressive_bow_limit < 2): # Swordless but with a pool normally lacking silvers
                 return False
 
-        if self.world.retro[player]:
+        if self.world.retro[player] in ["classic", "enhanced"]:
             return (
                 (self.has('Bow', player) and self.has('Silver Arrows', player)) # Single Arrow irrelevant, can fire silvers anyway
                 or (self.has('Silver Bow', player) and self.can_buy('Single Arrow', player)) # Need to buy Single Arrow for progressive
@@ -2244,8 +2244,7 @@ class Spoiler(object):
                     outfile.write('Progression Balanced:            %s\n' % (
                         'Yes' if self.metadata['progression_balancing'][player] else 'No'))
                 outfile.write('Mode:                            %s\n' % self.metadata['mode'][player])
-                outfile.write('Retro:                           %s\n' %
-                              ('Yes' if self.metadata['retro'][player] else 'No'))
+                outfile.write('Retro:                           %s\n' % self.metadata['retro'][player])
                 outfile.write('Swords:                          %s\n' % self.metadata['weapons'][player])
                 outfile.write('Goal:                            %s\n' % self.metadata['goal'][player])
                 if "triforce" in self.metadata["goal"][player]:  # triforce hunt

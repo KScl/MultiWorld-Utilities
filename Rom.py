@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 JPN10HASH = '03a63945398191337e896e5771f77173'
-RANDOMIZERBASEHASH = 'd074e178c20ab955586dec0a49cb556b'
+RANDOMIZERBASEHASH = 'f0e5b033bf5984f7ca6e3d239a7f953c'
 
 import io
 import itertools
@@ -1023,8 +1023,13 @@ def patch_rom(world, rom, player, team, enemized, is_mystery=False):
         extra_credits_stats.append(CreditsStat("GT BIG KEY", 0x7EF42A, bitsize=5, digits=2, total=gt_big_key_count))
  
     credits_total = 216
-    if world.retro[player]:  # Old man cave and Take any caves will count towards collection rate.
+
+    # Old man cave and Take any caves will count towards collection rate.
+    if world.retro[player] == 'enhanced':
+        credits_total += 10
+    elif world.retro[player] == 'classic':
         credits_total += 5
+
     if world.shop_shuffle_slots[player]:  # Potion shop only counts towards collection rate if included in the shuffle.
         credits_total += 30 if 'w' in world.shop_shuffle[player] else 27
     if world.keydropshuffle[player]:
@@ -1199,13 +1204,18 @@ def patch_rom(world, rom, player, team, enemized, is_mystery=False):
         prize_replacements[0xE1] = 0xDA  # 5 Arrows -> Blue Rupee
         prize_replacements[0xE2] = 0xDB  # 10 Arrows -> Red Rupee
 
+    # 6FA62 : Prize pack drop chance (0x01: 50%, 0x00: 100%)
+
     if "g" in world.shuffle_prizes[player]:
         # shuffle prize packs
-        prizes = [0xD8, 0xD8, 0xD8, 0xD8, 0xD9, 0xD8, 0xD8, 0xD9, 0xDA, 0xD9, 0xDA, 0xDB, 0xDA, 0xD9, 0xDA, 0xDA, 0xE0,
-                  0xDF, 0xDF, 0xDA, 0xE0, 0xDF, 0xD8, 0xDF,
-                  0xDC, 0xDC, 0xDC, 0xDD, 0xDC, 0xDC, 0xDE, 0xDC, 0xE1, 0xD8, 0xE1, 0xE2, 0xE1, 0xD8, 0xE1, 0xE2, 0xDF,
-                  0xD9, 0xD8, 0xE1, 0xDF, 0xDC, 0xD9, 0xD8,
-                  0xD8, 0xE3, 0xE0, 0xDB, 0xDE, 0xD8, 0xDB, 0xE2, 0xD9, 0xDA, 0xDB, 0xD9, 0xDB, 0xD9, 0xDB]
+        prizes = [0xD8, 0xD8, 0xD8, 0xD8, 0xD9, 0xD8, 0xD8, 0xD9,
+                  0xDA, 0xD9, 0xDA, 0xDB, 0xDA, 0xD9, 0xDA, 0xDA,
+                  0xE0, 0xDF, 0xDF, 0xDA, 0xE0, 0xDF, 0xD8, 0xDF,
+                  0xDC, 0xDC, 0xDC, 0xDD, 0xDC, 0xDC, 0xDE, 0xDC,
+                  0xE1, 0xD8, 0xE1, 0xE2, 0xE1, 0xD8, 0xE1, 0xE2,
+                  0xDF, 0xD9, 0xD8, 0xE1, 0xDF, 0xDC, 0xD9, 0xD8,
+                  0xD8, 0xE3, 0xE0, 0xDB, 0xDE, 0xD8, 0xDB, 0xE2,
+                  0xD9, 0xDA, 0xDB, 0xD9, 0xDB, 0xD9, 0xDB]
         dig_prizes = [0xB2, 0xD8, 0xD8, 0xD8, 0xD8, 0xD8, 0xD8, 0xD8, 0xD8,
                       0xD9, 0xD9, 0xD9, 0xD9, 0xD9, 0xDA, 0xDA, 0xDA, 0xDA, 0xDA,
                       0xDB, 0xDB, 0xDB, 0xDB, 0xDB, 0xDC, 0xDC, 0xDC, 0xDC, 0xDC,
@@ -1711,18 +1721,42 @@ def patch_rom(world, rom, player, team, enemized, is_mystery=False):
         player] else 0x0000)  # Bomb Shop Reveal
 
     rom.write_byte(0x180172, 0x01 if world.keyshuffle[player] == "universal" else 0x00)  # universal keys
-    rom.write_byte(0x18637E, 0x01 if world.retro[player] else 0x00)  # Skip quiver in item shops once bought
-    rom.write_byte(0x180175, 0x01 if world.retro[player] else 0x00)  # rupee bow
-    rom.write_byte(0x180176, 0x0A if world.retro[player] else 0x00)  # wood arrow cost
-    rom.write_byte(0x180178, 0x32 if world.retro[player] else 0x00)  # silver arrow cost
-    rom.write_byte(0x301FC, 0xDA if world.retro[player] else 0xE1)  # rupees replace arrows under pots
-    rom.write_byte(0x30052, 0xDB if world.retro[player] else 0xE2)  # replace arrows in fish prize from bottle merchant
-    rom.write_bytes(0xECB4E, [0xA9, 0x00, 0xEA, 0xEA] if world.retro[player] else [0xAF, 0x77, 0xF3,
-                                                                                   0x7E])  # Thief steals rupees instead of arrows
-    rom.write_bytes(0xF0D96, [0xA9, 0x00, 0xEA, 0xEA] if world.retro[player] else [0xAF, 0x77, 0xF3,
-                                                                                   0x7E])  # Pikit steals rupees instead of arrows
-    rom.write_bytes(0xEDA5,
-                    [0x35, 0x41] if world.retro[player] else [0x43, 0x44])  # Chest game gives rupees instead of arrows
+
+    # 0x18637E flag no longer in use, skipping the quiver is handled automatically
+    if world.retro[player] == 'enhanced':
+        rom.write_byte(0x180175, 0x01)  # rupee bow
+        rom.write_byte(0x180176, 0x01)  # wood arrow cost
+        rom.write_byte(0x180178, 0x0A)  # silver arrow cost
+        # Reduce the general rupee count.
+        rom.write_byte(0x301F4, 0x00)  # secret drop: green rupee -> nothing
+        rom.write_byte(0x301FA, 0xD9)  # secret drop: blue rupee -> green rupee
+        rom.write_byte(0x301FC, 0xDA)  # secret drop: 5 arrows -> blue rupee
+        rom.write_bytes(0x30202, [0xD9, 0xD9, 0xDA, 0xDB])  # secret drop: harmful drops -> rupees (various)
+        rom.write_bytes(0x30218, [0x00, 0x00, 0x00, 0x00])  # setting variables for above
+        rom.write_bytes(0x3022E, [0x04, 0x04, 0x04, 0x04])  # setting variables for above (drop X offset)
+        rom.write_bytes(0x30244, [0x01, 0x01, 0x01, 0x01])  # setting variables for above
+        rom.write_bytes(0x3025A, [0x10, 0x10, 0x10, 0x10])  # setting variables for above (speed to rise upwards)
+        rom.write_bytes(0xEDA1, [0x41, 0x36, 0x35, 0x34, 0x27, 0x28, 0x31]) # Chest game non-item prizes
+        rom.write_bytes(0x3004F, [0xDA, 0xE0, 0xDB, 0xDE, 0xDA])  # fish prize
+        rom.write_bytes(0xECB4E, [0xA9, 0x00, 0xEA, 0xEA]) # prevent thief from stealing arrows (code: LDA #$00 : NOP #2)
+        rom.write_bytes(0xF0D96, [0xA9, 0x00, 0xEA, 0xEA]) # prevent pikit from stealing arrows (code: LDA #$00 : NOP #2)
+    elif world.retro[player] == 'classic':
+        rom.write_byte(0x180175, 0x01)  # rupee bow
+        rom.write_byte(0x180176, 0x0A)  # wood arrow cost
+        rom.write_byte(0x180178, 0x32)  # silver arrow cost
+        # Remove arrows from drops, etc.
+        rom.write_byte(0x301FC, 0xDA)  # secret drop: 5 arrows -> blue rupee
+        rom.write_bytes(0xEDA1, [0x40, 0x41, 0x34, 0x42, 0x35, 0x41, 0x27]) # Chest game non-item prizes
+        rom.write_bytes(0x3004F, [0xDB, 0xE0, 0xDE, 0xDB, 0xD9])  # fish prize
+        rom.write_bytes(0xECB4E, [0xA9, 0x00, 0xEA, 0xEA]) # prevent thief from stealing arrows (code: LDA #$00 : NOP #2)
+        rom.write_bytes(0xF0D96, [0xA9, 0x00, 0xEA, 0xEA]) # prevent pikit from stealing arrows (code: LDA #$00 : NOP #2)
+    else:
+        rom.write_byte(0x180175, 0x00)  # rupee bow
+        rom.write_byte(0x180176, 0x00)  # wood arrow cost
+        rom.write_byte(0x180178, 0x00)  # silver arrow cost
+        # Other values left untouched
+
+
     digging_game_rng = local_random.randint(1, 30)  # set rng for digging game
     rom.write_byte(0x180020, digging_game_rng)
     rom.write_byte(0xEFD95, digging_game_rng)
