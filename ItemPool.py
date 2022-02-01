@@ -666,6 +666,13 @@ def set_up_retro_enhanced(world, player):
         take_any_locs.remove('Dark Sanctuary Hint') # player starts there
     world.random.shuffle(take_any_locs)
 
+    take_any_locs = take_any_locs[0:8]
+    for i in range(2): # Attempt to weight the Fighter's Sword towards the starting world, just a bit.
+        if (world.mode[player] in ['inverted']) ^ any([word for word in ['Dark', 'Archery'] if word in take_any_locs[0]]):
+            take_any_locs = take_any_locs[1:] + [take_any_locs[0]]
+        else:
+            break
+
     sword_take_any = [
         make_retro_connection(world, player, "Old Man Sword Cave",  take_any_locs.pop(), sword_cave = True),
         make_retro_connection(world, player, 'Master Sword Cave',   take_any_locs.pop(), sword_cave = True),
@@ -773,7 +780,7 @@ def set_up_retro_classic(world, player):
         old_man_take_any.shop.add_inventory(0, sword.name, 0, 0)
         # No location is made for the sword so technically, it's completely out of logic
         # Previous code attempted to make a location for the sword cave, but it failed
-        # as the code that would set up dynamic locations has already run.
+        # as the code that would set up dynamic shop locations has already run.
     else:
         old_man_take_any.shop.add_inventory(0, 'Rupees (300)', 0, 0)
 
