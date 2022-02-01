@@ -107,7 +107,7 @@ class WebUiClient(Node, logging.Handler):
 
     def send_location_check(self, ctx: Context, last_check: str):
         self.broadcast_all(self.build_message('locationCheck', {
-            'totalChecks': len(ctx.locations_checked),
+            'totalChecks': len(ctx.locations_recognized),
             'hintPoints': ctx.hint_points,
             'lastCheck': last_check,
         }))

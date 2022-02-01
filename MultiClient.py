@@ -97,6 +97,7 @@ class Context():
         self.items_received = []
         self.items_missing = []
         self.items_checked = None
+        self.items_total = []
         self.locations_info = {}
         self.awaiting_rom = False
         self.rom = None
@@ -105,6 +106,7 @@ class Context():
         self.found_items = found_items
         self.finished_game = False
         self.slow_mode = False
+        self.first_track = False
 
     @property
     def endpoints(self):
@@ -175,9 +177,7 @@ SCOUTREPLY_ITEM_ADDR = SAVEDATA_START + 0x4D9       # 1 byte
 SCOUTREPLY_PLAYER_ADDR = SAVEDATA_START + 0x4DA     # 1 byte
 SHOP_ADDR = SAVEDATA_START + 0x302                  # 2 bytes
 
-
-location_shop_order = [name for name, info in Shops.shop_table.items()] # probably don't leave this here.  This relies on python 3.6+ dictionary keys having defined order
-location_shop_ids = set([info[0] for name, info in Shops.shop_table.items()])
+location_shop_ids = set([info.room for name, info in Shops.shop_table.items()])
 
 location_table_uw = {"Blind's Hideout - Top": (0x11d, 0x10),
                      "Blind's Hideout - Left": (0x11d, 0x20),
@@ -909,6 +909,10 @@ async def process_server_cmd(ctx: Context, cmd, args):
         if not ctx.items_missing and not ctx.items_checked:
             asyncio.create_task(ctx.send_msgs([['Say', '!missing']]))
 
+        # Track all items the server recognizes.
+        ctx.items_total = ctx.items_missing + ctx.items_checked if ctx.items_checked is not None else ctx.items_missing
+        ctx.first_track = True # Hide the initial burst of items if reconnecting to a seed where checks have been done
+
     elif cmd == 'ReceivedItems':
         start_index, items = args
         if start_index == 0:
@@ -1168,26 +1172,22 @@ async def console_loop(ctx: Context):
 
 async def track_locations(ctx : Context, roomid, roomdata):
     new_locations = []
+    new_printable_checks = {}
 
     def new_check(location):
+        nonlocal new_printable_checks
         ctx.locations_checked.add(location)
 
-        check = None
-        if ctx.items_checked is None:
-            check = f'New Check: {location} ({len(ctx.locations_checked)}/{len(Regions.lookup_name_to_id)})'
-        else:
-            items_total = len(ctx.items_missing) + len(ctx.items_checked)
-            if location in ctx.items_missing or location in ctx.items_checked:
-                ctx.locations_recognized.add(location)
-                check = f'New Check: {location} ({len(ctx.locations_recognized)}/{items_total})'
+        if location not in ctx.items_total and ctx.items_checked is not None:
+            return # Don't output anything for "checks" that aren't relevant to the seed
 
-        if check:
-            logger.info(check)
-        ctx.ui_node.send_location_check(ctx, location)
+        ctx.locations_recognized.add(location)
+        new_printable_checks[location] = len(ctx.locations_recognized)
     
     try: 
-        if roomid in location_shop_ids:
-            misc_data = await snes_read(ctx, SHOP_ADDR, (len(location_shop_order)*3)+10)
+        # Always fetch shop checks the first go around so we can stay synced with the server
+        if ctx.first_track or roomid in location_shop_ids:
+            misc_data = await snes_read(ctx, SHOP_ADDR, len(Shops.shop_table_by_location_id))
             for cnt, b in enumerate(misc_data):
                 my_check = Shops.shop_table_by_location_id[Shops.SHOP_ID_START + cnt]
                 if int(b) > 0 and my_check not in ctx.locations_checked:
@@ -1260,7 +1260,25 @@ async def track_locations(ctx : Context, roomid, roomdata):
             print(e)
             logger.info(f"Exception: {e}")
 
+    # Output to console for any new relevant checks
+    if len(new_printable_checks):
+        check_total = len(ctx.items_total) if ctx.items_checked is not None else len(Regions.lookup_name_to_id)
 
+        skipped_count = 0
+        for (location, check_count) in new_printable_checks.items():
+            # Show if the server doesn't think we checked that location yet, or if it's not the first time tracking
+            if not ctx.first_track or location not in ctx.locations_checked:
+                logger.info(f"New check: {location} ({check_count}/{check_total})")
+            else:
+                skipped_count += 1
+
+        if skipped_count:
+            check_count = len(ctx.locations_recognized)
+            logger.info(f"{skipped_count} checks previously done on this save file ({check_count}/{check_total})")
+
+        ctx.ui_node.send_location_check(ctx, list(new_printable_checks.keys())[-1])
+
+    ctx.first_track = False
     await ctx.send_msgs([['LocationChecks', new_locations]])
 
 
