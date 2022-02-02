@@ -593,6 +593,7 @@ class MultiByteCoreTextMapper(object):
         "{IBOX}": [0x6B, 0x02, 0x77, 0x07, 0x7A, 0x03],
         "{C:GREEN}": [0x77, 0x07],
         "{C:YELLOW}": [0x77, 0x02],
+        "{FLAG:GOAL}": [0x7B, 0x01],
     }
 
     @classmethod
@@ -694,7 +695,8 @@ class MultiByteCoreTextMapper(object):
 class CompressedTextMapper(object):
     two_byte_commands = [
         0x6B, 0x6C, 0x6D, 0x6E,
-        0x77, 0x78, 0x79, 0x7A
+        0x77, 0x78, 0x79, 0x7A,
+        0x7B # not present in original game
     ]
     specially_coded_commands = {
         0x73: 0xF6,

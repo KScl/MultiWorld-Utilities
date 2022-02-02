@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 JPN10HASH = '03a63945398191337e896e5771f77173'
-RANDOMIZERBASEHASH = 'f0e5b033bf5984f7ca6e3d239a7f953c'
+RANDOMIZERBASEHASH = '902bbbdc2c8f5eff23e358c8018db292'
 
 import io
 import itertools
@@ -76,6 +76,13 @@ class LocalRom(object):
 
     def write_bytes(self, startaddress: int, values):
         self.buffer[startaddress:startaddress + len(values)] = values
+
+    def write_sheet(self, sheetnum: int, address: int):
+        # Changes the location of a tile sheet to the requested SNES address
+        address_bytes = address.to_bytes(3, 'little')
+        self.buffer[0x4FC0+sheetnum] = address_bytes[2]
+        self.buffer[0x509F+sheetnum] = address_bytes[1]
+        self.buffer[0x517E+sheetnum] = address_bytes[0]
 
     def encrypt_range(self, startaddress: int, length: int, key: bytes):
         for i in range(0, length, 8):
@@ -1042,24 +1049,16 @@ def patch_rom(world, rom, player, team, enemized, is_mystery=False):
     # patch medallion requirements
     if world.required_medallions[player][0] == 'Bombos':
         rom.write_byte(0x180022, 0x00)  # requirement
-        rom.write_byte(0x4FF2, 0x31)  # sprite
-        rom.write_byte(0x50D1, 0x80)
-        rom.write_byte(0x51B0, 0x00)
+        rom.write_sheet(50, 0x318000)  # update tiles on ground
     elif world.required_medallions[player][0] == 'Quake':
         rom.write_byte(0x180022, 0x02)  # requirement
-        rom.write_byte(0x4FF2, 0x31)  # sprite
-        rom.write_byte(0x50D1, 0x88)
-        rom.write_byte(0x51B0, 0x00)
+        rom.write_sheet(50, 0x318800)  # update tiles on ground
     if world.required_medallions[player][1] == 'Bombos':
         rom.write_byte(0x180023, 0x00)  # requirement
-        rom.write_byte(0x5020, 0x31)  # sprite
-        rom.write_byte(0x50FF, 0x90)
-        rom.write_byte(0x51DE, 0x00)
+        rom.write_sheet(96, 0x319000)  # update tiles on ground
     elif world.required_medallions[player][1] == 'Ether':
         rom.write_byte(0x180023, 0x01)  # requirement
-        rom.write_byte(0x5020, 0x31)  # sprite
-        rom.write_byte(0x50FF, 0x98)
-        rom.write_byte(0x51DE, 0x00)
+        rom.write_sheet(96, 0x319800)  # update tiles on ground
 
     # set open mode:
     if world.mode[player] in ['open', 'inverted']:
@@ -1962,18 +1961,32 @@ def write_custom_shops(rom, world, player):
 
 
 def hud_format_text(text):
+    extra_char_map = {
+        ' ': [0x7F, 0x00],
+        '_': [0x7F, 0x00],
+        '+': [0x04, 0x28],
+        '-': [0x05, 0x28],
+        ':': [0x06, 0x28],
+        '/': [0x30, 0x28],
+        '!': [0x77, 0x29],
+        '?': [0x78, 0x29],
+        ',': [0x79, 0x29],
+        '.': [0x7A, 0x29],
+        "'": [0x7B, 0x29],
+        '"': [0x7C, 0x29],
+        '(': [0x7D, 0x29],
+        ')': [0x7E, 0x29],
+    }
     output = bytes()
     for char in text.lower():
         if 'a' <= char <= 'z':
             output += bytes([0x5d + ord(char) - ord('a'), 0x29])
-        elif '0' <= char <= '8':
-            output += bytes([0x77 + ord(char) - ord('0'), 0x29])
-        elif char == '9':
-            output += b'\x4b\x29'
-        elif char == ' ' or char == '_':
-            output += b'\x7f\x00'
+        elif '0' <= char <= '9':
+            output += bytes([0x90 + ord(char) - ord('0'), 0x28])
+        elif char in extra_char_map:
+            output += bytes(extra_char_map[char])
         else:
-            output += b'\x2a\x29'
+            output += bytes(extra_char_map['?'])
     while len(output) < 32:
         output += b'\x7f\x00'
     return output[:32]
@@ -2596,10 +2609,10 @@ def write_strings(rom, world, player, team):
     elif world.goal[player] in ['ganontriforcehunt', 'localganontriforcehunt']:
         piece_count = '1 Triforce piece' if world.treasure_hunt_count[player] == 1 else '%d Triforce pieces' % world.treasure_hunt_count[player]
         if world.goal[player] == 'localtriforcehunt' or world.players == 1:
-            tt['sign_ganon'] = 'You need to find %s out of %d to defeat Ganon.' % \
+            tt['sign_ganon'] = '{FLAG:GOAL}\nYou need to find %s out of %d to defeat Ganon.' % \
                 (piece_count, world.triforce_pieces_available[player])
         else:
-            tt['sign_ganon'] = 'You need to find %s out of %d with everyone to defeat Ganon.' % \
+            tt['sign_ganon'] = '{FLAG:GOAL}\nYou need to find %s out of %d with everyone to defeat Ganon.' % \
                 (piece_count, world.triforce_pieces_available[player])
     elif world.goal[player] == 'dungeons':
         tt['sign_ganon'] = 'You need to complete all the dungeons to defeat Ganon.'
@@ -2638,11 +2651,11 @@ def write_strings(rom, world, player, team):
     elif world.goal[player] in ['triforcehunt', 'localtriforcehunt']:
         murahdahla = "Hello @.\nI am Murahdahla, brother of Sahasrahla and Aginah.\n\nBehold, the power of invisibility!" \
             "\n\n\n…\n\n" \
-            "Wait, you can see me, can't you?\n\nI knew I should have hidden in a hollow tree…\n"
+            "Wait, you can see me, can't you?\n\nI knew I should have hidden in a hollow tree…\n{PAGEBREAK}\n{FLAG:GOAL}\n"
         if world.triforce_pieces_available[player] == 1:
-            murahdahla += '{PAGEBREAK}\nThe Triforce was shattered into\n1 piece.\n'
+            murahdahla += 'The Triforce was shattered into\n1 piece.\n'
         else:
-            murahdahla += '{PAGEBREAK}\nThe Triforce was shattered into \n%d pieces.\n' % world.triforce_pieces_available[player]
+            murahdahla += 'The Triforce was shattered into \n%d pieces.\n' % world.triforce_pieces_available[player]
         if world.treasure_hunt_count[player] == world.triforce_pieces_available[player]:
             murahdahla += "Bring all of them\nback to me, and I\ncan restore it."
         elif world.treasure_hunt_count[player] == 1:
@@ -2906,9 +2919,7 @@ def set_inverted_mode(world, player, rom):
     rom.write_int16(snes_to_pc(0x1af58c), 0x54AE)
     rom.write_byte(snes_to_pc(0x00DB9D), 0x1A)  # castle hole graphics
     rom.write_byte(snes_to_pc(0x00DC09), 0x1A)
-    rom.write_byte(snes_to_pc(0x00D009), 0x31)
-    rom.write_byte(snes_to_pc(0x00D0e8), 0xE0)
-    rom.write_byte(snes_to_pc(0x00D1c7), 0x00)
+    rom.write_sheet(73, 0x31E000)
     rom.write_int16(snes_to_pc(0x1BE8DA), 0x39AD)
     rom.write_byte(0xF6E58, 0x80)  # no whirlpool under castle gate
     rom.write_bytes(0x0086E, [0x5C, 0x00, 0xA0, 0xA1])  # TR tail
