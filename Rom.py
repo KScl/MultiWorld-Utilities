@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 JPN10HASH = '03a63945398191337e896e5771f77173'
-RANDOMIZERBASEHASH = '509ace9b9f3b5f6efa10159de97dd076'
+RANDOMIZERBASEHASH = 'ccc1ddaf77c54244794c9fd7405816fd'
 
 import io
 import itertools

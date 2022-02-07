@@ -129,6 +129,7 @@ item_hint_text = {
     'Rupees (300)':                   ('300 rupees',             'A rupee hoard! Hell yeah!', None, None, None),
     'Rupoor':                         ('a Rupoor',               'Pay me for the pedestal repair charge.', 'Pay me for the tablet repair charge.', None, None),
     'Small Heart':                    ('a recovery heart',       'Feeling affectionate today?', None, None, None),
+    'Magic Jar':                      ('a magic refill',         'Watch your\nMagic Meter!', None, None, None),
     # Bottles
     'Bottle':                         ('a bottle',               'Now you can store potions and stuff!', None, None, None),
     'Bottle (Red Potion)':            ('a bottle',               'Hearty red goop!', None, None, None),
@@ -296,6 +297,7 @@ item_credit_text = {
     'Rupees (300)':                   ('and the rupee hoard',   'the really-rich kid', 'life lesson for sale',  'buying the best drugs',    'fat-cat boy is rich again',        'your uncle is rich'),
     'Rupoor':                         ('and the toll-booth',    'the toll-booth kid',  'double loss for sale',  'witch stole your rupees',  'affluent boy steals rupees again', 'your uncle is a thief'),
     'Small Heart':                    ('and the tiny heart',    'affection-giving kid','affection for sale',    'i heart shrooms',          'loving boy has affection again',   'your uncle is creepy'),
+    'Magic Jar':                      ('and the fancy pottery', 'the ceramics kid',    'playing pot of greed',  'shrooms in a jar',         'clay-working boy has magic again', 'your uncle likes ceramics'),
     # Bottles
     'Bottle':                         ('and the terrarium',     'the terrarium kid',   'terrarium for sale',    'special promotion',        'bottle boy has terrarium again',   'your uncle likes turtles'),
     'Bottle (Red Potion)':            ('and the red goo',       'the liquid kid',      'potion for sale',       'free samples',             'bottle boy has red goo again',     'your uncle helps out'),
@@ -465,6 +467,7 @@ item_table = {
     'Rupees (300)':                   (False, 'Junk', 0x46),
     'Rupoor':                         (False, 'Junk', 0x59),
     'Small Heart':                    (False, 'Junk', 0x42), # Works in chests just fine
+    'Magic Jar':                      (False, 'Junk', 0xB3), # Works in chests just fine (after baserom update)
     # Bottles
     'Bottle':                         (True, None, 0x16),
     'Bottle (Red Potion)':            (True, None, 0x2B),
@@ -487,7 +490,6 @@ item_table = {
     'Bee Trap':                       (False, None, 0xB0), # Spawns a burst of bees over the player
     'Single RNG':                     (False, None, 0x62), # Never once tested this in my life
     'Multi RNG':                      (False, None, 0x63), # Never once tested this in my life
-    'Magic Jar':                      (False, None, 0xB3), # Meant to be bought in shops, doesn't work properly sometimes if obtained from chest.
     #'Hint':                           (False, None, 0xB5), # Commented out in vanilla Archipelago, probably nonfunctional
     #'Bomb Trap':                      (False, None, 0xB6), # Commented out in vanilla Archipelago, probably nonfunctional
     # Free Small Keys
