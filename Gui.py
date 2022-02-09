@@ -498,6 +498,8 @@ def guiMain(args=None):
         guiargs.hud_palettes = rom_vars.hudPalettesVar.get()
         guiargs.sword_palettes = rom_vars.swordPalettesVar.get()
         guiargs.shield_palettes = rom_vars.shieldPalettesVar.get()
+        guiargs.msuresume = bool(rom_vars.msuResumeVar.get())
+        guiargs.triforcehud = rom_vars.triforceHudVar.get()
         guiargs.shuffleganon = bool(shuffleGanonVar.get())
         guiargs.hints = bool(hintsVar.get())
         guiargs.enemizercli = enemizerCLIpathVar.get()
@@ -1294,6 +1296,7 @@ def guiMain(args=None):
         rom_vars.romVar.set(args.rom)
         shuffleGanonVar.set(args.shuffleganon)
         hintsVar.set(args.hints)
+        rom_vars.msuResumeVar.set(args.msuresume)
         if args.sprite is not None:
             set_sprite(Sprite(args.sprite))
 
@@ -1331,23 +1334,67 @@ def get_rom_options_frame(parent=None):
     romOptionsFrame = LabelFrame(parent, text="Rom options")
     romOptionsFrame.columnconfigure(0, weight=1)
     romOptionsFrame.columnconfigure(1, weight=1)
-    for i in range(5):
+    for i in range(7):
         romOptionsFrame.rowconfigure(i, weight=1)
     vars = Namespace()
 
-    vars.disableMusicVar = IntVar()
-    disableMusicCheckbutton = Checkbutton(romOptionsFrame, text="Disable music", variable=vars.disableMusicVar)
-    disableMusicCheckbutton.grid(row=0, column=0, sticky=E)
-
     vars.disableFlashingVar = IntVar(value=1)
     disableFlashingCheckbutton = Checkbutton(romOptionsFrame, text="Disable flashing (anti-epilepsy)", variable=vars.disableFlashingVar)
-    disableFlashingCheckbutton.grid(row=6, column=0, sticky=E)
+    disableFlashingCheckbutton.grid(row=0, column=0, sticky=E)
+
+    vars.disableMusicVar = IntVar()
+    disableMusicCheckbutton = Checkbutton(romOptionsFrame, text="Disable music", variable=vars.disableMusicVar)
+    disableMusicCheckbutton.grid(row=1, column=0, sticky=E)
+
+    vars.msuResumeVar = IntVar(value=1)
+    msuResumeCheckbutton = Checkbutton(romOptionsFrame, text="Resume overworld music", variable=vars.msuResumeVar)
+    msuResumeCheckbutton.grid(row=2, column=0, sticky=E)
+
+    vars.quickSwapVar = IntVar(value=1)
+    quickSwapCheckbutton = Checkbutton(romOptionsFrame, text="L/R Quickswapping", variable=vars.quickSwapVar)
+    quickSwapCheckbutton.grid(row=3, column=0, sticky=E)
+
+    fastMenuFrame = Frame(romOptionsFrame)
+    fastMenuFrame.grid(row=4, column=0, sticky=E)
+    fastMenuLabel = Label(fastMenuFrame, text='Menu speed')
+    fastMenuLabel.pack(side=LEFT)
+    vars.fastMenuVar = StringVar()
+    vars.fastMenuVar.set('normal')
+    fastMenuOptionMenu = OptionMenu(fastMenuFrame, vars.fastMenuVar, 'normal', 'instant', 'double', 'triple', 'quadruple', 'half')
+    fastMenuOptionMenu.pack(side=LEFT)
+
+    heartcolorFrame = Frame(romOptionsFrame)
+    heartcolorFrame.grid(row=5, column=0, sticky=E)
+    heartcolorLabel = Label(heartcolorFrame, text='Heart color')
+    heartcolorLabel.pack(side=LEFT)
+    vars.heartcolorVar = StringVar()
+    vars.heartcolorVar.set('red')
+    heartcolorOptionMenu = OptionMenu(heartcolorFrame, vars.heartcolorVar, 'red', 'blue', 'green', 'yellow', 'random')
+    heartcolorOptionMenu.pack(side=LEFT)
+
+    heartbeepFrame = Frame(romOptionsFrame)
+    heartbeepFrame.grid(row=6, column=0, sticky=E)
+    heartbeepLabel = Label(heartbeepFrame, text='Low health beep speed')
+    heartbeepLabel.pack(side=LEFT)
+    vars.heartbeepVar = StringVar()
+    vars.heartbeepVar.set('normal')
+    heartbeepOptionMenu = OptionMenu(heartbeepFrame, vars.heartbeepVar, 'double', 'normal', 'half', 'quarter', 'off')
+    heartbeepOptionMenu.pack(side=LEFT)
+
+    triforceHudFrame = Frame(romOptionsFrame)
+    triforceHudFrame.grid(row=7, column=0, sticky=E)
+    triforceHudLabel = Label(triforceHudFrame, text='Triforce HUD display')
+    triforceHudLabel.pack(side=LEFT)
+    vars.triforceHudVar = StringVar()
+    vars.triforceHudVar.set('hide_goal')
+    triforceHudOptionMenu = OptionMenu(triforceHudFrame, vars.triforceHudVar, 'normal', 'hide_goal', 'hide_required', 'hide_both')
+    triforceHudOptionMenu.pack(side=LEFT)
+
+    # -------------------------------------------------------------------------
 
     spriteDialogFrame = Frame(romOptionsFrame)
     spriteDialogFrame.grid(row=0, column=1)
     baseSpriteLabel = Label(spriteDialogFrame, text='Sprite:')
-
-
 
     vars.spriteNameVar = StringVar()
     vars.sprite = None
@@ -1377,39 +1424,8 @@ def get_rom_options_frame(parent=None):
     spriteEntry.pack(side=LEFT)
     spriteSelectButton.pack(side=LEFT)
 
-    vars.quickSwapVar = IntVar(value=1)
-    quickSwapCheckbutton = Checkbutton(romOptionsFrame, text="L/R Quickswapping", variable=vars.quickSwapVar)
-    quickSwapCheckbutton.grid(row=1, column=0, sticky=E)
-
-    fastMenuFrame = Frame(romOptionsFrame)
-    fastMenuFrame.grid(row=1, column=1, sticky=E)
-    fastMenuLabel = Label(fastMenuFrame, text='Menu speed')
-    fastMenuLabel.pack(side=LEFT)
-    vars.fastMenuVar = StringVar()
-    vars.fastMenuVar.set('normal')
-    fastMenuOptionMenu = OptionMenu(fastMenuFrame, vars.fastMenuVar, 'normal', 'instant', 'double', 'triple', 'quadruple', 'half')
-    fastMenuOptionMenu.pack(side=LEFT)
-
-    heartcolorFrame = Frame(romOptionsFrame)
-    heartcolorFrame.grid(row=2, column=0, sticky=E)
-    heartcolorLabel = Label(heartcolorFrame, text='Heart color')
-    heartcolorLabel.pack(side=LEFT)
-    vars.heartcolorVar = StringVar()
-    vars.heartcolorVar.set('red')
-    heartcolorOptionMenu = OptionMenu(heartcolorFrame, vars.heartcolorVar, 'red', 'blue', 'green', 'yellow', 'random')
-    heartcolorOptionMenu.pack(side=LEFT)
-
-    heartbeepFrame = Frame(romOptionsFrame)
-    heartbeepFrame.grid(row=2, column=1, sticky=E)
-    heartbeepLabel = Label(heartbeepFrame, text='Heartbeep')
-    heartbeepLabel.pack(side=LEFT)
-    vars.heartbeepVar = StringVar()
-    vars.heartbeepVar.set('normal')
-    heartbeepOptionMenu = OptionMenu(heartbeepFrame, vars.heartbeepVar, 'double', 'normal', 'half', 'quarter', 'off')
-    heartbeepOptionMenu.pack(side=LEFT)
-
     owPalettesFrame = Frame(romOptionsFrame)
-    owPalettesFrame.grid(row=3, column=0, sticky=E)
+    owPalettesFrame.grid(row=1, column=1, sticky=E)
     owPalettesLabel = Label(owPalettesFrame, text='Overworld palettes')
     owPalettesLabel.pack(side=LEFT)
     vars.owPalettesVar = StringVar()
@@ -1418,7 +1434,7 @@ def get_rom_options_frame(parent=None):
     owPalettesOptionMenu.pack(side=LEFT)
 
     uwPalettesFrame = Frame(romOptionsFrame)
-    uwPalettesFrame.grid(row=3, column=1, sticky=E)
+    uwPalettesFrame.grid(row=2, column=1, sticky=E)
     uwPalettesLabel = Label(uwPalettesFrame, text='Dungeon palettes')
     uwPalettesLabel.pack(side=LEFT)
     vars.uwPalettesVar = StringVar()
@@ -1427,7 +1443,7 @@ def get_rom_options_frame(parent=None):
     uwPalettesOptionMenu.pack(side=LEFT)
 
     hudPalettesFrame = Frame(romOptionsFrame)
-    hudPalettesFrame.grid(row=4, column=0, sticky=E)
+    hudPalettesFrame.grid(row=3, column=1, sticky=E)
     hudPalettesLabel = Label(hudPalettesFrame, text='HUD palettes')
     hudPalettesLabel.pack(side=LEFT)
     vars.hudPalettesVar = StringVar()
@@ -1445,7 +1461,7 @@ def get_rom_options_frame(parent=None):
     swordPalettesOptionMenu.pack(side=LEFT)
 
     shieldPalettesFrame = Frame(romOptionsFrame)
-    shieldPalettesFrame.grid(row=5, column=0, sticky=E)
+    shieldPalettesFrame.grid(row=5, column=1, sticky=E)
     shieldPalettesLabel = Label(shieldPalettesFrame, text='Shield palettes')
     shieldPalettesLabel.pack(side=LEFT)
     vars.shieldPalettesVar = StringVar()
@@ -1454,7 +1470,7 @@ def get_rom_options_frame(parent=None):
     shieldPalettesOptionMenu.pack(side=LEFT)
 
     spritePoolFrame = Frame(romOptionsFrame)
-    spritePoolFrame.grid(row=5, column=1)
+    spritePoolFrame.grid(row=6, column=1)
     baseSpritePoolLabel = Label(spritePoolFrame, text='Sprite Pool:')
 
     vars.spritePoolCountVar = StringVar()

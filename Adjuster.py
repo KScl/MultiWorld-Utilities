@@ -56,6 +56,7 @@ def main():
     parser.add_argument('--sword_palettes', default='default', choices=['default', 'random', 'blackout','puke','classic','grayscale','negative','dizzy','sick'])
     parser.add_argument('--hud_palettes', default='default', choices=['default', 'random', 'blackout','puke','classic','grayscale','negative','dizzy','sick'])
     parser.add_argument('--uw_palettes', default='default', choices=['default', 'random', 'blackout','puke','classic','grayscale','negative','dizzy','sick'])
+    parser.add_argument('--msuresume', help='Resumes overworld music instead of restarting when another room is entered only briefly.', action='store_true')
     parser.add_argument('--sprite', help='''\
                              Path to a sprite sheet to use for Link. Needs to be in
                              binary format and have a length of 0x7000 (28672) bytes,
@@ -99,22 +100,33 @@ def adjust(args):
     else:
         raise RuntimeError(
             'Provided Rom is not a valid Link to the Past Randomizer Rom. Please provide one for adjusting.')
-    palettes_options={}
-    palettes_options['dungeon']=args.uw_palettes
-
-    palettes_options['overworld']=args.ow_palettes
-    palettes_options['hud']=args.hud_palettes
-    palettes_options['sword']=args.sword_palettes
-    palettes_options['shield']=args.shield_palettes
-    # palettes_options['link']=args.link_palettesvera
 
     racerom = rom.read_byte(0x180213) > 0
+    adjuster_options = {
+        'palettes_underworld': args.uw_palettes,
+        'palettes_overworld': args.ow_palettes,
+        'palettes_hud': args.hud_palettes,
+        'palettes_sword': args.sword_palettes,
+        'palettes_shield': args.shield_palettes,
+        #'palettes_link': args.link_palettesvera,
+
+        'heartbeep': args.heartbeep,
+        'heartcolor': args.heartcolor,
+        'quickswap': args.quickswap,
+        'fastmenu': args.fastmenu,
+        'nomusic': args.disablemusic,
+        'msuresume': args.msuresume,
+        'sprite': args.sprite,
+
+        'reduceflashing': args.reduceflashing or racerom,
+        'triforcehud': args.triforcehud
+    }
+
     world = None
     if hasattr(args, "world"):
         world = getattr(args, "world")
 
-    apply_rom_settings(rom, args.heartbeep, args.heartcolor, args.quickswap, args.fastmenu, args.disablemusic,
-                       args.sprite, palettes_options, reduceflashing=args.reduceflashing or racerom, world=world)
+    apply_rom_settings(rom, adjuster_options, world=world)
     path = output_path(f'{os.path.basename(args.rom)[:-4]}_adjusted.sfc')
     rom.write_to_file(path)
 
@@ -167,6 +179,8 @@ def adjustGUI():
         guiargs.quickswap = bool(rom_vars.quickSwapVar.get())
         guiargs.disablemusic = bool(rom_vars.disableMusicVar.get())
         guiargs.reduceflashing = bool(rom_vars.disableFlashingVar.get())
+        guiargs.msuresume = bool(rom_vars.msuResumeVar.get())
+        guiargs.triforcehud = rom_vars.triforceHudVar.get()
         guiargs.rom = romVar2.get()
         guiargs.baserom = romVar.get()
         guiargs.sprite = rom_vars.sprite

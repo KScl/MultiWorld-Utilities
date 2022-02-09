@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 JPN10HASH = '03a63945398191337e896e5771f77173'
-RANDOMIZERBASEHASH = 'ccc1ddaf77c54244794c9fd7405816fd'
+RANDOMIZERBASEHASH = '2033e2282a93bc77244aff5e48fd6d88'
 
 import io
 import itertools
@@ -1992,10 +1992,22 @@ def hud_format_text(text):
     return output[:32]
 
 
-def apply_rom_settings(rom, beep, color, quickswap, fastmenu, disable_music, sprite: str, palettes_options,
-                       world=None, player=1, allow_random_on_event=False, reduceflashing=False,
-                       triforcehud: str = None):
+def apply_rom_settings(rom, adjuster_options, world=None, player=1):
     local_random = random if not world else world.rom_seeds[player]
+
+    # beep, color, quickswap, fastmenu, disable_music, sprite: str, palettes_options
+    #  allow_random_on_event=False, reduceflashing=False, triforcehud: str = None
+    beep = adjuster_options.get('heartbeep', 'normal')
+    color = adjuster_options.get('heartcolor', 'red')
+    quickswap = adjuster_options.get('quickswap', True)
+    fastmenu = adjuster_options.get('fastmenu', 'default')
+    disable_music = adjuster_options.get('nomusic', False)
+    msu_resume = adjuster_options.get('msuresume', True)
+    sprite = adjuster_options.get('sprite', 'Link')
+
+    allow_random_on_event = adjuster_options.get('allowrandomsprite', False)
+    reduceflashing = adjuster_options.get('reduceflashing', False)
+    triforcehud = adjuster_options.get('triforcehud', None)
 
     # enable instant item menu
     if fastmenu == 'instant':
@@ -2049,6 +2061,9 @@ def apply_rom_settings(rom, beep, color, quickswap, fastmenu, disable_music, spr
 
     rom.write_byte(0x18021A, 1 if disable_music else 0x00)
 
+    # msu track resuming -- if less frames than this spent in an area, overworld music will resume instead of restarting
+    rom.write_int16(0x18021D, 30*60 if msu_resume else 0)
+
     # set heart beep rate
     rom.write_byte(0x180033, {'off': 0x00, 'half': 0x40, 'quarter': 0x80, 'normal': 0x20, 'double': 0x10}[beep])
 
@@ -2094,12 +2109,12 @@ def apply_rom_settings(rom, beep, color, quickswap, fastmenu, disable_music, spr
                 mode = 'maseya'
             z3pr.randomize(rom.buffer, mode, offset_collections=offsets_array, random_colors=next_color_generator())
 
-        uw_palettes = palettes_options['dungeon']
-        ow_palettes = palettes_options['overworld']
-        hud_palettes = palettes_options['hud']
-        sword_palettes = palettes_options['sword']
-        shield_palettes = palettes_options['shield']
-        # link_palettes = palettes_options['link']
+        uw_palettes = adjuster_options['palettes_underworld']
+        ow_palettes = adjuster_options['palettes_overworld']
+        hud_palettes = adjuster_options['palettes_hud']
+        sword_palettes = adjuster_options['palettes_sword']
+        shield_palettes = adjuster_options['palettes_shield']
+        # link_palettes = adjuster_options['palettes_link']
         buildAndRandomize("randomize_dungeon", uw_palettes)
         buildAndRandomize("randomize_overworld", ow_palettes)
         buildAndRandomize("randomize_hud", hud_palettes)

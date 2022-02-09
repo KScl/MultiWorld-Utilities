@@ -460,6 +460,9 @@ rom:
   reduceflashing: # Reduces instances of flashing such as lightning attacks, weather, ether and more.
     on: 50
     off: 0
+  msuresume: # Resumes overworld music instead of restarting when another room is entered only briefly.
+    on: 50
+    off: 0
   menuspeed: # Controls how fast the item menu opens and closes
     normal: 50
     instant: 0

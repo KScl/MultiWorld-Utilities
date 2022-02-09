@@ -121,7 +121,7 @@ def parse_cli(argv, no_defaults=False):
                          'hud_palettes', 'sword_palettes', 'shield_palettes', 'link_palettes', 'keydropshuffle', 'mixed_travel',
                          'standardize_palettes', 'plando_items', 'plando_texts', 'plando_connections', 'required_medallions',
                          "shop_shuffle_slots", "reduceflashing", "er_seeds", "dr_seeds", "triforcehud",
-                         "item_pool_extend", "item_pool_remove"]:
+                         "item_pool_extend", "item_pool_remove", 'msuresume']:
                 value = getattr(defaults, name) if getattr(playerargs, name) is None else getattr(playerargs, name)
                 if player == 1:
                     setattr(ret, name, {1: value})

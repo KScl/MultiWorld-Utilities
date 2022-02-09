@@ -2103,6 +2103,26 @@
           "defaultValue": 0
         }
       }
+    },
+    "msuresume": {
+      "keyString": "rom.msuresume",
+      "friendlyName": "Resume Overworld Music",
+      "description": "Resumes overworld music instead of restarting when another room is entered only briefly.",
+      "inputType": "range",
+      "subOptions": {
+        "on": {
+          "keyString": "rom.msuresume.on",
+          "friendlyName": "Enabled",
+          "description": "Enable resuming overworld music.",
+          "defaultValue": 0
+        },
+        "off": {
+          "keyString": "rom.msuresume.off",
+          "friendlyName": "Disabled",
+          "description": "Disable resuming overworld music.",
+          "defaultValue": 50
+        }
+      }
     }
   }
 }

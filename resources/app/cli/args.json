@@ -384,6 +384,10 @@
       "sick"
     ]
   },
+  "msuresume": {
+    "action": "store_true",
+    "type": "bool"
+  },
   "sprite": {},
   "create_rom": {
     "action": "store_false",

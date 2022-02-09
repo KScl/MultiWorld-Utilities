@@ -400,19 +400,28 @@ def main(args, seed=None, fish=None):
 
         world.spoiler.hashes[(player, team)] = get_hash_string(rom.hash)
 
-        palettes_options={}
-        palettes_options['dungeon']=args.uw_palettes[player]
-        palettes_options['overworld']=args.ow_palettes[player]
-        palettes_options['hud']=args.hud_palettes[player]
-        palettes_options['sword']=args.sword_palettes[player]
-        palettes_options['shield']=args.shield_palettes[player]
-        palettes_options['link']=args.link_palettes[player]
-        
-        apply_rom_settings(rom, args.heartbeep[player], args.heartcolor[player], args.quickswap[player],
-                           args.fastmenu[player], args.disablemusic[player], args.sprite[player],
-                           palettes_options, world, player, True,
-                           reduceflashing=args.reduceflashing[player] or args.race,
-                           triforcehud=args.triforcehud[player])
+        adjuster_options = {
+            'palettes_underworld': args.uw_palettes[player],
+            'palettes_overworld': args.ow_palettes[player],
+            'palettes_hud': args.hud_palettes[player],
+            'palettes_sword': args.sword_palettes[player],
+            'palettes_shield': args.shield_palettes[player],
+            'palettes_link': args.link_palettes[player],
+
+            'heartbeep': args.heartbeep[player],
+            'heartcolor': args.heartcolor[player],
+            'quickswap': args.quickswap[player],
+            'fastmenu': args.fastmenu[player],
+            'nomusic': args.disablemusic[player],
+            'msuresume': args.msuresume[player],
+            'sprite': args.sprite[player],
+
+            'allowrandomsprite': True,
+            'triforcehud': args.triforcehud[player],
+
+            'reduceflashing': args.reduceflashing[player] or args.race
+        }
+        apply_rom_settings(rom, adjuster_options, world, player)
 
         mcsb_name = ''
         if all([world.mapshuffle[player], world.compassshuffle[player], world.keyshuffle[player], world.bigkeyshuffle[player]]):

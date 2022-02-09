@@ -872,6 +872,7 @@ def roll_settings(weights: dict, plando_options: typing.Set[str] = frozenset(("b
                             ret.sprite_pool += [key] * int(value)
 
         ret.disablemusic = get_choice('disablemusic', romweights, False)
+        ret.msuresume = get_choice('msuresume', romweights, True)
         ret.triforcehud = get_choice('triforcehud', romweights, 'hide_goal')
         ret.quickswap = get_choice('quickswap', romweights, True)
         ret.fastmenu = get_choice('menuspeed', romweights, "normal")
