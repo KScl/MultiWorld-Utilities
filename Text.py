@@ -688,8 +688,10 @@ class MultiByteCoreTextMapper(object):
             return (2, offset+1)
         if c in ['@']:
             return (4, offset+1)
-        if c in ['ᚋ', 'ᚌ', 'ᚍ', 'ᚎ']:
-            return (2, offset+1)
+        # Correct me if I'm wrong, but these are all one digit, right???
+        # Why was the given width for this two?
+        #if c in ['ᚋ', 'ᚌ', 'ᚍ', 'ᚎ']:
+        #    return (2, offset+1)
         return (1, offset+1)
 
 class CompressedTextMapper(object):
@@ -1472,13 +1474,13 @@ class TextTable(object):
             "{NOBORDER}\nThis is a bad place, with a guy who will make you fall…\n\n\na lot.")
         text['houlihan_room'] = CompressedTextMapper.convert(
             "My name is\nChris Houlihan!\n\nHere's a bunch of money for finding me!")
-        text['caught_a_bee'] = CompressedTextMapper.convert("Caught a Bee\n  ≥ Keep\n    Release\n{CHOICE}")
-        text['caught_a_fairy'] = CompressedTextMapper.convert("Caught a Fairy!\n  ≥ Keep\n    Release\n{CHOICE}")
+        text['caught_a_bee'] = CompressedTextMapper.convert("Caught a bee\n  ≥ Keep\n    Release\n{CHOICE}")
+        text['caught_a_fairy'] = CompressedTextMapper.convert("Caught a fairy!\n  ≥ Keep\n    Release\n{CHOICE}")
         text['no_empty_bottles'] = CompressedTextMapper.convert("Whoa, bucko!\nNo empty bottles.")
-        text['game_race_boy_time'] = CompressedTextMapper.convert("Your time was\nᚎᚍ min ᚌᚋ sec.")
-        text['game_race_girl'] = CompressedTextMapper.convert("You have 15 seconds,\nGo… Go… Go…")
-        text['game_race_boy_success'] = CompressedTextMapper.convert("Nice!\nYou can have this trash!")
-        text['game_race_boy_failure'] = CompressedTextMapper.convert("Too slow!\nI keep my precious!")
+        text['game_race_boy_time'] = CompressedTextMapper.convert("Your time was…\nᚎᚍ min. ᚌᚋ sec.")
+        text['game_race_girl'] = CompressedTextMapper.convert("You have 15 seconds.\nGo… Go… Go…")
+        text['game_race_boy_success'] = CompressedTextMapper.convert("Nice! You can have this trash!")
+        text['game_race_boy_failure'] = CompressedTextMapper.convert("Too slow! I keep my precious!")
         text['game_race_boy_already_won'] = CompressedTextMapper.convert("You already have your prize, dingus!")
         # D0
         text['game_race_boy_sneaky'] = CompressedTextMapper.convert("Thought you could sneak in, eh?")
@@ -1661,7 +1663,7 @@ class TextTable(object):
         text['shop_buy_bee'] = CompressedTextMapper.convert("He's my best friend. Please take care of him, and never lose him.")
         text['shop_buy_heart'] = CompressedTextMapper.convert("You really just bought this?")
         text['shop_first_no_bottle_buy'] = CompressedTextMapper.convert("Why does no one own bottles? Go find one first!")
-        text['shop_buy_no_space'] = CompressedTextMapper.convert("You are carrying to much crap, go use some of it first!")
+        text['shop_buy_no_space'] = CompressedTextMapper.convert("You're carrying way too much, use some of it first!")
         text['ganon_fall_in'] = CompressedTextMapper.convert("You drove\naway my other\nself, Agahnim,\ntwo times…\nBut, I won't\ngive you the\nTriforce.\nI'll defeat\nyou!")
         # 170
         text['ganon_phase_3'] = CompressedTextMapper.convert("Can you beat\nmy darkness\ntechnique?")

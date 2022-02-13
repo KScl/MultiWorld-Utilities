@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 JPN10HASH = '03a63945398191337e896e5771f77173'
-RANDOMIZERBASEHASH = 'ca9b9f3f022b533b9fc0c20cbef0c897'
+RANDOMIZERBASEHASH = 'c69acdcd6f96d4a106b31b01e2744e1e'
 
 import io
 import itertools
@@ -1870,7 +1870,19 @@ def patch_rom(world, rom, player, team, enemized, is_mystery=False):
     if world.shop_shuffle_slots[player] or world.retro[player]:
         extra_credits_stats.append(CreditsStat("RUPEES SPENT", 0x7EF42B))
     if world.keyshuffle[player] in ['universal']:
-        extra_credits_stats.append(CreditsStat("KEYS USED", 0x7EF46F))
+        extra_credits_stats.append(CreditsStat("KEYS USED", 0x7EF46F, bitsize=8, digits=2))
+    # -------------------------------------------------------------------------
+    # If we have no extra stats, add a random one
+    if not extra_credits_stats:
+        silly_stats = [
+            CreditsStat("CHECKS BEFORE BOOTS", 0x7EF432, bitsize=8, digits=3),
+            CreditsStat("CHECKS BEFORE PEARL", 0x7EF433, bitsize=8, digits=3),
+            CreditsStat("CHECKS BEFORE MIRROR", 0x7EF468, bitsize=8, digits=3),
+            CreditsStat("DUCK CALLS", 0x7EF44B, bitsize=8, digits=2), # times fluted
+            CreditsStat("RUPEES SPENT", 0x7EF42B),
+            CreditsStat("TRANSITIONS", 0x7EF43C),
+        ]
+        extra_credits_stats.append(world.random.choice(silly_stats))
     # -------------------------------------------------------------------------
 
     write_strings(rom, world, player, team)
